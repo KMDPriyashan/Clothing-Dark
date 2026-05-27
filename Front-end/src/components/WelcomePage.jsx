@@ -1,6 +1,13 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from './Navbar'
+
+// Import your images from assets folder
+import largeImage from '../assets/Large.png'
+import smallImage1 from '../assets/Small01.png'
+import smallImage2 from '../assets/Small02.png'
+import heroBackground from '../assets/hero.png'
+
 import '../components_CSS/WelcomePage.css'
 
 const WelcomePage = () => {
@@ -15,7 +22,7 @@ const WelcomePage = () => {
         <div className="hero-content">
           <div className="hero-text">
             <div className="badge">PREMIUM COLLECTION 2024</div>
-            <h1 className="brand-name">CLOTHING<span>&nbsp;&nbsp;-&nbsp;&nbsp;DARK </span></h1>
+            <h1 className="brand-name">CLOTHING<span>&nbsp;-&nbsp;DARK </span></h1>
             <p className="brand-description">
               Experience the epitome of elegance with our premium black collection. 
               Crafted from the finest materials for the perfect blend of comfort and style.
@@ -51,26 +58,43 @@ const WelcomePage = () => {
           </div>
         </div>
         
-        {/* Hero Images */}
-        <div className="hero-images">
-          <div className="image-card image-2">
-            <div className="image-wrapper">
-              <img 
-                src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
-                alt="Woman in black shirt"
-                className="hero-img"
-              />
-              <div className="image-label">Premium Black Shirt</div>
+        {/* Hero Images - New Layout with your images */}
+        <div className="hero-images-layout">
+          {/* Large Image on the right */}
+          <div className="large-image-container">
+            <div className="image-card large-image-card">
+              <div className="image-wrapper">
+                <img 
+                  src={largeImage}
+                  alt="Premium Black Collection"
+                  className="hero-img large-img"
+                />
+                
+              </div>
             </div>
           </div>
-          <div className="image-card image-3">
-            <div className="image-wrapper">
-              <img 
-                src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
-                alt="Model in black outfit"
-                className="hero-img"
-              />
-              <div className="image-label">Modern Fit</div>
+
+          {/* Small Images Stack */}
+          <div className="small-images-stack">
+            <div className="image-card small-image-card">
+              <div className="image-wrapper">
+                <img 
+                  src={smallImage1}
+                  alt="Classic Black Tee"
+                  className="hero-img small1-img"
+                />
+                
+              </div>
+            </div>
+            <div className="image-card small-image-card">
+              <div className="image-wrapper">
+                <img 
+                  src={smallImage2}
+                  alt="Modern Fit Shirt"
+                  className="hero-img small2-img"
+                />
+                
+              </div>
             </div>
           </div>
         </div>
@@ -86,7 +110,7 @@ const WelcomePage = () => {
           <div className="product-card">
             <div className="product-image">
               <img 
-                src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                src={smallImage1}
                 alt="Classic Black T-Shirt"
               />
               <div className="product-overlay">
@@ -106,7 +130,7 @@ const WelcomePage = () => {
           <div className="product-card">
             <div className="product-image">
               <img 
-                src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                src={smallImage2}
                 alt="Formal Black Shirt"
               />
               <div className="product-overlay">
@@ -126,7 +150,7 @@ const WelcomePage = () => {
           <div className="product-card">
             <div className="product-image">
               <img 
-                src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                src={largeImage}
                 alt="Premium Black Tee"
               />
               <div className="product-overlay">
