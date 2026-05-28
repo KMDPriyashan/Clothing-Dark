@@ -80,7 +80,7 @@ const Navbar = () => {
                   href="#products" 
                   onClick={(e) => {
                     e.preventDefault()
-                    scrollToSection('products')
+                    handleNavClick('shop', '/shop')
                   }}
                 >
                   Shop
