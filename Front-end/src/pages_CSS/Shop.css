@@ -71,6 +71,57 @@
   color: #666;
 }
 
+/* Filter Section */
+.filter-section {
+  padding: 30px 5% 0;
+  background: #ffffff;
+}
+
+.filter-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 25px;
+  background: #f8f9fa;
+  border-radius: 15px;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: #000;
+  font-size: 0.95rem;
+}
+
+.filter-group select {
+  padding: 8px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.filter-group select:hover {
+  border-color: #000;
+}
+
+.results-count {
+  color: #666;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
 /* Notification */
 .notification {
   position: fixed;
@@ -227,7 +278,18 @@
   font-size: 1.2rem;
   font-weight: 600;
   color: #000000;
+  margin-bottom: 8px;
+}
+
+.product-category {
+  display: inline-block;
+  background: #f0f0f0;
+  padding: 3px 10px;
+  border-radius: 5px;
+  font-size: 0.7rem;
+  color: #666;
   margin-bottom: 10px;
+  text-transform: capitalize;
 }
 
 .product-rating {
@@ -378,7 +440,18 @@
 .modal-info h2 {
   font-size: 1.8rem;
   color: #000;
+  margin-bottom: 10px;
+}
+
+.modal-category {
+  display: inline-block;
+  background: #f0f0f0;
+  padding: 5px 12px;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  color: #666;
   margin-bottom: 15px;
+  text-transform: capitalize;
 }
 
 .modal-rating {
@@ -595,6 +668,19 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1024px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+  }
+  
+  .product-image {
+    height: 320px;
+    margin-left: 50px;
+    margin-top: -50px;
+  }
+}
+
 @media (max-width: 768px) {
   .shop-hero-title {
     font-size: 2.5rem;
@@ -608,8 +694,31 @@
     font-size: 1.5rem;
   }
   
+  .filter-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-group {
+    justify-content: space-between;
+  }
+  
+  .filter-group select {
+    flex: 1;
+  }
+  
+  .results-count {
+    text-align: center;
+  }
+  
   .products-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .product-image {
+    height: 360px;
+    margin-left: 60px;
+    margin-top: -60px;
   }
   
   .modal-body {
@@ -631,6 +740,10 @@
 }
 
 @media (max-width: 480px) {
+  .shop-hero {
+    padding: 100px 5% 60px;
+  }
+  
   .shop-hero-title {
     font-size: 2rem;
   }
@@ -655,7 +768,54 @@
     font-size: 1.8rem;
   }
   
+  .section-header p {
+    font-size: 0.9rem;
+  }
+  
+  .product-image {
+    height: 300px;
+    margin-left: 40px;
+    margin-top: -40px;
+  }
+  
+  .product-name {
+    font-size: 1rem;
+  }
+  
+  .current-price {
+    font-size: 1.2rem;
+  }
+  
+  .filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .filter-group select {
+    width: 100%;
+  }
+  
   .shop-features {
     grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 40px 5%;
+  }
+  
+  .modal-body {
+    padding: 20px;
+  }
+  
+  .modal-image img {
+    height: 250px;
+  }
+  
+  .modal-info h2 {
+    font-size: 1.3rem;
+  }
+  
+  .size-option {
+    padding: 6px 15px;
+    font-size: 0.9rem;
   }
 }

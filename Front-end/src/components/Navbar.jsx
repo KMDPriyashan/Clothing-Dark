@@ -35,6 +35,7 @@ const Navbar = () => {
   const handleNavClick = (link, path) => {
     setActiveLink(link)
     if (path === '/') {
+      navigate('/')
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } else {
       navigate(path)
@@ -43,11 +44,22 @@ const Navbar = () => {
   }
 
   const scrollToSection = (sectionId) => {
-    const section = document.getElementById(sectionId)
-    if (section) {
-      section.scrollIntoView({ behavior: 'smooth' })
-      setIsMobileMenuOpen(false)
+    // If not on home page, navigate to home first then scroll
+    if (location.pathname !== '/') {
+      navigate('/')
+      setTimeout(() => {
+        const section = document.getElementById(sectionId)
+        if (section) {
+          section.scrollIntoView({ behavior: 'smooth' })
+        }
+      }, 100)
+    } else {
+      const section = document.getElementById(sectionId)
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth' })
+      }
     }
+    setIsMobileMenuOpen(false)
   }
 
   return (
@@ -65,7 +77,7 @@ const Navbar = () => {
             <ul className="nav-links">
               <li>
                 <a 
-                  href="#" 
+                  href="/"
                   className={activeLink === 'home' ? 'active' : ''}
                   onClick={(e) => {
                     e.preventDefault()
@@ -77,7 +89,8 @@ const Navbar = () => {
               </li>
               <li>
                 <a 
-                  href="#products" 
+                  href="/shop"
+                  className={activeLink === 'shop' ? 'active' : ''}
                   onClick={(e) => {
                     e.preventDefault()
                     handleNavClick('shop', '/shop')
@@ -154,7 +167,7 @@ const Navbar = () => {
           <ul className="mobile-nav-links">
             <li>
               <a 
-                href="#" 
+                href="/"
                 onClick={(e) => {
                   e.preventDefault()
                   handleNavClick('home', '/')
@@ -165,10 +178,10 @@ const Navbar = () => {
             </li>
             <li>
               <a 
-                href="#products" 
+                href="/shop"
                 onClick={(e) => {
                   e.preventDefault()
-                  scrollToSection('products')
+                  handleNavClick('shop', '/shop')
                 }}
               >
                 Shop
@@ -183,6 +196,17 @@ const Navbar = () => {
                 }}
               >
                 Features
+              </a>
+            </li>
+            <li>
+              <a 
+                href="#about" 
+                onClick={(e) => {
+                  e.preventDefault()
+                  scrollToSection('about')
+                }}
+              >
+                About Us
               </a>
             </li>
             <li>
