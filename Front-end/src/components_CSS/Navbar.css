@@ -200,10 +200,21 @@
   animation: slideIn 0.3s ease forwards;
 }
 
-.mobile-nav-links li:nth-child(1) { animation-delay: 0.1s; }
-.mobile-nav-links li:nth-child(2) { animation-delay: 0.2s; }
-.mobile-nav-links li:nth-child(3) { animation-delay: 0.3s; }
-.mobile-nav-links li:nth-child(4) { animation-delay: 0.4s; }
+.mobile-nav-links li:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.mobile-nav-links li:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.mobile-nav-links li:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.mobile-nav-links li:nth-child(4) {
+  animation-delay: 0.4s;
+}
 
 @keyframes slideIn {
   to {
@@ -268,23 +279,23 @@
   .navbar-menu {
     display: none;
   }
-  
+
   .navbar-auth {
     display: none;
   }
-  
+
   .mobile-menu-icon {
     display: flex;
   }
-  
+
   .navbar-container {
     padding: 0.8rem 5%;
   }
-  
+
   .navbar-logo {
     font-size: 1.2rem;
   }
-  
+
   .nav-links li a {
     padding: 0.5rem 1rem;
   }
@@ -295,11 +306,11 @@
   .nav-links {
     gap: 1rem;
   }
-  
+
   .nav-links li a {
     padding: 0.5rem 1rem;
   }
-  
+
   .auth-btn {
     padding: 0.5rem 1.2rem;
   }
@@ -310,9 +321,11 @@
   0% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
+
   100% {
     transform: scale(1);
   }
@@ -320,4 +333,69 @@
 
 .nav-links li a.active {
   animation: pulse 0.3s ease;
+}
+
+/* Cart Button Styles */
+.cart-btn {
+  position: relative;
+  background: transparent;
+  color: #000000;
+  border: 2px solid #000000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cart-btn:hover {
+  background: #000000;
+  color: white;
+}
+
+.cart-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 50%;
+  min-width: 18px;
+  text-align: center;
+  animation: bounce 0.5s ease;
+}
+
+@keyframes bounce {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+/* Mobile menu cart link */
+.mobile-nav-links li a[href="/cart"] {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .cart-btn {
+    padding: 0.5rem 1rem;
+  }
+
+  .cart-count {
+    top: -5px;
+    right: -5px;
+    font-size: 0.6rem;
+    padding: 2px 5px;
+    min-width: 16px;
+  }
 }
