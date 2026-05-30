@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 import '../components_CSS/Navbar.css'
 
 const Navbar = () => {
+  const { user, signout, isAuthenticated } = useAuth()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [cartCount, setCartCount] = useState(0)
@@ -53,6 +55,14 @@ const Navbar = () => {
     }
   }, [])
 
+  // Get user display name (first letter of email or "U")
+  const getUserInitial = () => {
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase()
+    }
+    return 'U'
+  }
+
   // Navigation functions using direct browser navigation
   const goToHome = () => {
     setIsMobileMenuOpen(false)
@@ -77,6 +87,16 @@ const Navbar = () => {
   const goToSignup = () => {
     setIsMobileMenuOpen(false)
     window.location.href = '/signup'
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signout()
+      setIsMobileMenuOpen(false)
+      window.location.href = '/'
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
   }
 
   const scrollToSection = (sectionId) => {
@@ -144,12 +164,39 @@ const Navbar = () => {
               🛒 Cart
               {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
             </button>
-            <button className="auth-btn login-btn" onClick={goToLogin}>
-              Sign In
-            </button>
-            <button className="auth-btn signup-btn" onClick={goToSignup}>
-              Get Started
-            </button>
+            
+            {isAuthenticated ? (
+              <>
+                <div className="user-dropdown">
+                  <button className="user-avatar-btn">
+                    <span className="user-avatar">{getUserInitial()}</span>
+                  </button>
+                  <div className="dropdown-menu">
+                    <div className="dropdown-item user-info">
+                      <span className="dropdown-user-icon">👤</span>
+                      <div>
+                        <div className="dropdown-user-name">Welcome!</div>
+                        <div className="dropdown-user-email">{user?.email}</div>
+                      </div>
+                    </div>
+                    <div className="dropdown-divider"></div>
+                    <button className="dropdown-item logout-item" onClick={handleSignOut}>
+                      <span className="dropdown-icon">🚪</span>
+                      Sign Out
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <button className="auth-btn login-btn" onClick={goToLogin}>
+                  Sign In
+                </button>
+                <button className="auth-btn signup-btn" onClick={goToSignup}>
+                  Get Started
+                </button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Icon */}
@@ -174,8 +221,25 @@ const Navbar = () => {
             <li><a href="#contact" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>Contact</a></li>
           </ul>
           <div className="mobile-auth">
-            <button className="auth-btn login-btn" onClick={goToLogin}>Sign In</button>
-            <button className="auth-btn signup-btn" onClick={goToSignup}>Get Started</button>
+            {isAuthenticated ? (
+              <>
+                <div className="mobile-user-info">
+                  <div className="mobile-user-avatar">{getUserInitial()}</div>
+                  <div className="mobile-user-details">
+                    <div className="mobile-user-name">Welcome back!</div>
+                    <div className="mobile-user-email">{user?.email}</div>
+                  </div>
+                </div>
+                <button className="auth-btn logout-btn mobile-logout" onClick={handleSignOut}>
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="auth-btn login-btn" onClick={goToLogin}>Sign In</button>
+                <button className="auth-btn signup-btn" onClick={goToSignup}>Get Started</button>
+              </>
+            )}
           </div>
         </div>
       </nav>

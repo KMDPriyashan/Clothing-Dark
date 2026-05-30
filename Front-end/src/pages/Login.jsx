@@ -1,23 +1,56 @@
-import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import '../pages_CSS/Auth.css'
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import '../pages_CSS/Auth.css';
 
-const Login = ({ setIsAuthenticated }) => {
-  const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+const Login = () => {
+  const navigate = useNavigate();
+  const { signin, signinWithGoogle } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    // Simple validation (replace with real authentication)
-    if (email && password) {
-      setIsAuthenticated(true)
-      navigate('/shop') // You'll create this page later
-    } else {
-      setError('Please fill in all fields')
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      await signin(email, password);
+      navigate('/shop');
+    } catch (err) {
+      console.error(err);
+      switch (err.code) {
+        case 'auth/user-not-found':
+          setError('No account found with this email');
+          break;
+        case 'auth/wrong-password':
+          setError('Incorrect password');
+          break;
+        case 'auth/invalid-email':
+          setError('Invalid email address');
+          break;
+        default:
+          setError('Failed to sign in. Please try again.');
+      }
+    } finally {
+      setLoading(false);
     }
-  }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await signinWithGoogle();
+      navigate('/shop');
+    } catch (err) {
+      setError('Google sign-in failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="auth-container">
@@ -38,6 +71,7 @@ const Login = ({ setIsAuthenticated }) => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required
+              disabled={loading}
             />
           </div>
           
@@ -49,18 +83,29 @@ const Login = ({ setIsAuthenticated }) => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               required
+              disabled={loading}
             />
           </div>
           
-          <button type="submit" className="auth-btn">Sign In</button>
+          <button type="submit" className="auth-btn" disabled={loading}>
+            {loading ? 'Signing In...' : 'Sign In'}
+          </button>
         </form>
+
+        <button 
+          onClick={handleGoogleSignIn} 
+          className="auth-btn google-btn"
+          disabled={loading}
+        >
+          Sign in with Google
+        </button>
         
         <div className="auth-footer">
           <p>Don't have an account? <Link to="/signup">Sign Up</Link></p>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

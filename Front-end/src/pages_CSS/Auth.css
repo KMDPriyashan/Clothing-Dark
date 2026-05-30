@@ -122,3 +122,13 @@
   color: #ccc;
   text-decoration: underline;
 }
+.google-btn {
+  margin-top: 15px;
+  background: #db4437;
+  color: white;
+  border: none;
+}
+
+.google-btn:hover {
+  background: #c53929;
+}
