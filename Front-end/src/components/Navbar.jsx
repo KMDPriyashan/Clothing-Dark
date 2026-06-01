@@ -79,6 +79,21 @@ const Navbar = () => {
     window.location.href = '/cart'
   }
 
+  const goToFeatures = () => {
+    setIsMobileMenuOpen(false)
+    window.location.href = '/features'
+  }
+
+  const goToAbout = () => {
+    setIsMobileMenuOpen(false)
+    window.location.href = '/about'
+  }
+
+  const goToContact = () => {
+    setIsMobileMenuOpen(false)
+    window.location.href = '/contact'
+  }
+
   const goToLogin = () => {
     setIsMobileMenuOpen(false)
     window.location.href = '/login'
@@ -141,17 +156,17 @@ const Navbar = () => {
                 </a>
               </li>
               <li>
-                <a href="#features" onClick={(e) => { e.preventDefault(); scrollToSection('features'); }}>
+                <a href="/features" onClick={(e) => { e.preventDefault(); goToFeatures(); }}>
                   Features
                 </a>
               </li>
               <li>
-                <a href="#about" onClick={(e) => { e.preventDefault(); scrollToSection('about'); }}>
+                <a href="/about" onClick={(e) => { e.preventDefault(); goToAbout(); }}>
                   About Us
                 </a>
               </li>
               <li>
-                <a href="#contact" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>
+                <a href="/contact" onClick={(e) => { e.preventDefault(); goToContact(); }}>
                   Contact
                 </a>
               </li>
@@ -216,9 +231,9 @@ const Navbar = () => {
             <li><a href="/" onClick={(e) => { e.preventDefault(); goToHome(); }}>Home</a></li>
             <li><a href="/shop" onClick={(e) => { e.preventDefault(); goToShop(); }}>Shop</a></li>
             <li><a href="/cart" onClick={(e) => { e.preventDefault(); goToCart(); }}>Cart {cartCount > 0 && `(${cartCount})`}</a></li>
-            <li><a href="#features" onClick={(e) => { e.preventDefault(); scrollToSection('features'); }}>Features</a></li>
-            <li><a href="#about" onClick={(e) => { e.preventDefault(); scrollToSection('about'); }}>About Us</a></li>
-            <li><a href="#contact" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>Contact</a></li>
+            <li><a href="/features" onClick={(e) => { e.preventDefault(); goToFeatures(); }}>Features</a></li>
+            <li><a href="/about" onClick={(e) => { e.preventDefault(); goToAbout(); }}>About Us</a></li>
+            <li><a href="/contact" onClick={(e) => { e.preventDefault(); goToContact(); }}>Contact</a></li>
           </ul>
           <div className="mobile-auth">
             {isAuthenticated ? (
