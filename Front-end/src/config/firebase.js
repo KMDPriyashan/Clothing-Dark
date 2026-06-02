@@ -1,15 +1,15 @@
 import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword, 
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
 
-// Your Firebase configuration (replace with your actual config)
+// Your Firebase configuration (REPLACE WITH YOUR ACTUAL CONFIG)
 const firebaseConfig = {
   apiKey: "AIzaSyAAHfe3Wdt5KH5s86PUXhzOMhyYoC3FrZE",
   authDomain: "clothing-dark-auth.firebaseapp.com",

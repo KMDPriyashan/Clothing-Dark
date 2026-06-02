@@ -368,7 +368,7 @@ html {
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 30px;
+  gap: 20px;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -390,6 +390,7 @@ html {
 .feature-icon {
   font-size: 3rem;
   margin-bottom: 20px;
+  align-items: center;
 }
 
 .feature-card h3 {

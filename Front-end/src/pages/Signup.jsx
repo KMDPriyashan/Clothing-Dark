@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { sendWelcomeEmail } from '../services/emailService';
 import '../pages_CSS/Auth.css';
 
 const Signup = () => {
@@ -12,6 +13,7 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -27,27 +29,47 @@ const Signup = () => {
     }
 
     setError('');
+    setSuccessMessage('');
     setLoading(true);
 
     try {
-      await signup(email, password);
-      navigate('/shop');
+      // Step 1: Create user account in Firebase
+      console.log('Creating account for:', email);
+      const userCredential = await signup(email, password);
+      console.log('Account created successfully:', userCredential.user.uid);
+      
+      // Step 2: Try to send welcome email (don't block signup if fails)
+      try {
+        const emailResult = await sendWelcomeEmail({ name, email });
+        if (emailResult.success) {
+          setSuccessMessage('Account created! Welcome email sent to your inbox.');
+        } else {
+          console.log('Email not sent, but account created successfully');
+        }
+      } catch (emailError) {
+        console.log('Email error (non-critical):', emailError);
+      }
+      
+      // Step 3: Navigate to shop page
+      setTimeout(() => {
+        navigate('/shop');
+      }, 1500);
+      
     } catch (err) {
-      console.error(err);
+      console.error('Signup error:', err);
       switch (err.code) {
         case 'auth/email-already-in-use':
-          setError('Email already in use');
+          setError('Email already in use. Please login instead.');
           break;
         case 'auth/invalid-email':
           setError('Invalid email address');
           break;
         case 'auth/weak-password':
-          setError('Password is too weak');
+          setError('Password is too weak. Use at least 6 characters');
           break;
         default:
           setError('Failed to create account. Please try again.');
       }
-    } finally {
       setLoading(false);
     }
   };
@@ -56,11 +78,22 @@ const Signup = () => {
     setError('');
     setLoading(true);
     try {
-      await signinWithGoogle();
+      const result = await signinWithGoogle();
+      console.log('Google signup successful:', result.user.uid);
+      
+      const userName = result.user.displayName || result.user.email.split('@')[0];
+      
+      // Try to send welcome email (don't block)
+      try {
+        await sendWelcomeEmail({ name: userName, email: result.user.email });
+      } catch (emailError) {
+        console.log('Email error (non-critical):', emailError);
+      }
+      
       navigate('/shop');
     } catch (err) {
+      console.error('Google signup error:', err);
       setError('Google sign-in failed. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
@@ -74,6 +107,11 @@ const Signup = () => {
         </div>
         
         {error && <div className="error-message">{error}</div>}
+        {successMessage && (
+          <div className="success-message">
+            ✓ {successMessage}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
@@ -129,11 +167,16 @@ const Signup = () => {
           </button>
         </form>
 
+        <div className="or-divider">
+          <span>or</span>
+        </div>
+
         <button 
           onClick={handleGoogleSignIn} 
           className="auth-btn google-btn"
           disabled={loading}
         >
+          <span style={{ marginRight: '10px' }}>G</span>
           Sign up with Google
         </button>
         

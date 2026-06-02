@@ -104,6 +104,11 @@ const Navbar = () => {
     window.location.href = '/signup'
   }
 
+  const goToProfile = () => {
+    setIsMobileMenuOpen(false)
+    window.location.href = '/profile'
+  }
+
   const handleSignOut = async () => {
     try {
       await signout()
@@ -183,7 +188,7 @@ const Navbar = () => {
             {isAuthenticated ? (
               <>
                 <div className="user-dropdown">
-                  <button className="user-avatar-btn">
+                  <button className="user-avatar-btn" onClick={goToProfile}>
                     <span className="user-avatar">{getUserInitial()}</span>
                   </button>
                   <div className="dropdown-menu">
@@ -194,6 +199,10 @@ const Navbar = () => {
                         <div className="dropdown-user-email">{user?.email}</div>
                       </div>
                     </div>
+                    <button className="dropdown-item" onClick={goToProfile}>
+                      <span className="dropdown-icon">⚙️</span>
+                      Profile Settings
+                    </button>
                     <div className="dropdown-divider"></div>
                     <button className="dropdown-item logout-item" onClick={handleSignOut}>
                       <span className="dropdown-icon">🚪</span>
