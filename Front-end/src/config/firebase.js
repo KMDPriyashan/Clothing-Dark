@@ -1,13 +1,16 @@
 import { initializeApp } from 'firebase/app';
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  updateProfile
 } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 // Your Firebase configuration (REPLACE WITH YOUR ACTUAL CONFIG)
 const firebaseConfig = {
@@ -23,6 +26,8 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 
 // Auth functions
@@ -44,4 +49,17 @@ export const logout = () => {
 
 export const onAuthChange = (callback) => {
   return onAuthStateChanged(auth, callback);
+};
+
+export const updateUserProfileData = async (user, profileData) => {
+  try {
+    await updateProfile(user, {
+      displayName: profileData.displayName || user.displayName,
+      photoURL: profileData.photoURL || user.photoURL
+    });
+    return true;
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    throw error;
+  }
 };

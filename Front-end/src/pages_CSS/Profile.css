@@ -622,3 +622,161 @@
     font-size: 0.85rem;
   }
 }
+
+/* Profile Image Upload */
+.profile-avatar {
+  position: relative;
+  display: inline-block;
+}
+
+.avatar-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid white;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.upload-image-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #000;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-image-btn:hover {
+  background: #333;
+  transform: scale(1.05);
+}
+
+.upload-icon {
+  color: white;
+  font-size: 14px;
+}
+
+/* Feedback Section */
+.feedback-form-container {
+  margin-bottom: 40px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.feedback-form-container h3 {
+  font-size: 1.1rem;
+  color: #000;
+  margin-bottom: 15px;
+}
+
+.feedback-form textarea {
+  width: 100%;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s ease;
+}
+
+.feedback-form textarea:focus {
+  outline: none;
+  border-color: #000;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.05);
+}
+
+.submit-feedback-btn {
+  margin-top: 15px;
+  padding: 10px 25px;
+  background: #000;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.submit-feedback-btn:hover:not(:disabled) {
+  background: #333;
+  transform: translateY(-2px);
+}
+
+.recent-feedback h3 {
+  font-size: 1.1rem;
+  color: #000;
+  margin-bottom: 20px;
+}
+
+.feedback-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.feedback-item {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.feedback-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.feedback-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.feedback-user {
+  color: #000;
+  font-size: 1rem;
+}
+
+.feedback-date {
+  color: #999;
+  font-size: 0.8rem;
+}
+
+.feedback-text {
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.feedback-rating {
+  color: #ffc107;
+  font-size: 0.9rem;
+}
+
+.no-feedback {
+  text-align: center;
+  color: #999;
+  padding: 40px;
+}
+
+@media (max-width: 768px) {
+  .feedback-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .feedback-item {
+    padding: 15px;
+  }
+}

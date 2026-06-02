@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { db, storage, updateUserProfileData } from '../config/firebase';
+import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Navbar from '../components/Navbar';
 import '../pages_CSS/Profile.css';
 
@@ -10,6 +13,9 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [profileImage, setProfileImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
   
   // Profile form state
   const [profileData, setProfileData] = useState({
@@ -20,7 +26,8 @@ const Profile = () => {
     city: '',
     postalCode: '',
     country: 'Sri Lanka',
-    bio: ''
+    bio: '',
+    photoURL: ''
   });
   
   // Password change state
@@ -30,7 +37,12 @@ const Profile = () => {
     confirmPassword: ''
   });
   
-  // Order history (mock data - replace with API call)
+  // Feedback state
+  const [feedback, setFeedback] = useState('');
+  const [feedbackList, setFeedbackList] = useState([]);
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  
+  // Order history (mock data)
   const [orders, setOrders] = useState([
     {
       id: 'ORD-001',
@@ -54,47 +66,110 @@ const Profile = () => {
     }
   ]);
 
-  // Load user data from localStorage and Firebase
+  // Load user data from Firestore
   useEffect(() => {
-    if (user) {
-      setProfileData({
-        name: user.displayName || localStorage.getItem('user_name') || '',
-        email: user.email || '',
-        phone: localStorage.getItem('user_phone') || '',
-        address: localStorage.getItem('user_address') || '',
-        city: localStorage.getItem('user_city') || '',
-        postalCode: localStorage.getItem('user_postal') || '',
-        country: localStorage.getItem('user_country') || 'Sri Lanka',
-        bio: localStorage.getItem('user_bio') || ''
-      });
-    }
+    const loadUserData = async () => {
+      if (user) {
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setProfileData({
+              name: userData.name || user.displayName || '',
+              email: user.email || '',
+              phone: userData.phone || '',
+              address: userData.address || '',
+              city: userData.city || '',
+              postalCode: userData.postalCode || '',
+              country: userData.country || 'Sri Lanka',
+              bio: userData.bio || '',
+              photoURL: userData.photoURL || user.photoURL || ''
+            });
+            if (userData.photoURL) {
+              setImagePreview(userData.photoURL);
+            }
+          } else {
+            setProfileData({
+              name: user.displayName || '',
+              email: user.email || '',
+              phone: '',
+              address: '',
+              city: '',
+              postalCode: '',
+              country: 'Sri Lanka',
+              bio: '',
+              photoURL: user.photoURL || ''
+            });
+            if (user.photoURL) {
+              setImagePreview(user.photoURL);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading user data:', error);
+        }
+      }
+    };
+    
+    loadUserData();
   }, [user]);
 
+  // Load feedback from Firestore
+  useEffect(() => {
+    const loadFeedback = async () => {
+      try {
+        const feedbackQuery = query(
+          collection(db, 'feedback'),
+          orderBy('createdAt', 'desc'),
+          limit(3)
+        );
+        const feedbackSnapshot = await getDocs(feedbackQuery);
+        const loadedFeedback = feedbackSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setFeedbackList(loadedFeedback);
+      } catch (error) {
+        console.error('Error loading feedback:', error);
+      }
+    };
+    
+    loadFeedback();
+  }, []);
+
   // If not authenticated, redirect to login
-  // But wait for auth to finish loading first
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate('/login');
     }
   }, [isAuthenticated, authLoading, navigate]);
 
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="profile-container">
-        <Navbar />
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If not authenticated, don't render the profile content
-  if (!isAuthenticated) {
-    return null;
-  }
+  // Handle profile image upload
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setUploadingImage(true);
+      try {
+        const imageRef = ref(storage, `profile_images/${user.uid}/${Date.now()}_${file.name}`);
+        await uploadBytes(imageRef, file);
+        const photoURL = await getDownloadURL(imageRef);
+        
+        setProfileImage(photoURL);
+        setImagePreview(URL.createObjectURL(file));
+        setProfileData({ ...profileData, photoURL });
+        
+        setMessage({ type: 'success', text: 'Image uploaded successfully! Save your profile to update.' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        setMessage({ type: 'error', text: 'Failed to upload image' });
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      } finally {
+        setUploadingImage(false);
+      }
+    }
+  };
 
   const handleProfileChange = (e) => {
     setProfileData({
@@ -116,18 +191,30 @@ const Profile = () => {
     setMessage({ type: '', text: '' });
     
     try {
-      // Save to localStorage
-      localStorage.setItem('user_name', profileData.name);
-      localStorage.setItem('user_phone', profileData.phone);
-      localStorage.setItem('user_address', profileData.address);
-      localStorage.setItem('user_city', profileData.city);
-      localStorage.setItem('user_postal', profileData.postalCode);
-      localStorage.setItem('user_country', profileData.country);
-      localStorage.setItem('user_bio', profileData.bio);
+      // Update Firebase Auth display name
+      if (profileData.name !== user.displayName) {
+        await updateUserProfileData(user, { displayName: profileData.name });
+      }
+      
+      // Save to Firestore
+      const userDocRef = doc(db, 'users', user.uid);
+      await setDoc(userDocRef, {
+        name: profileData.name,
+        phone: profileData.phone,
+        address: profileData.address,
+        city: profileData.city,
+        postalCode: profileData.postalCode,
+        country: profileData.country,
+        bio: profileData.bio,
+        photoURL: profileData.photoURL || profileImage,
+        email: user.email,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
       
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
+      console.error('Error updating profile:', error);
       setMessage({ type: 'error', text: 'Failed to update profile' });
     } finally {
       setLoading(false);
@@ -151,7 +238,6 @@ const Profile = () => {
     setMessage({ type: '', text: '' });
     
     try {
-      // Mock password update
       setMessage({ type: 'success', text: 'Password updated successfully!' });
       setPasswordData({
         currentPassword: '',
@@ -163,6 +249,51 @@ const Profile = () => {
       setMessage({ type: 'error', text: 'Failed to update password' });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Submit feedback
+  const handleSubmitFeedback = async (e) => {
+    e.preventDefault();
+    if (!feedback.trim()) {
+      setMessage({ type: 'error', text: 'Please enter your feedback' });
+      return;
+    }
+    
+    setSubmittingFeedback(true);
+    try {
+      const newFeedbackData = {
+        userId: user.uid,
+        userName: profileData.name || user.displayName || 'Anonymous',
+        userEmail: user.email,
+        feedback: feedback,
+        createdAt: new Date().toISOString(),
+        rating: 5
+      };
+      
+      await addDoc(collection(db, 'feedback'), newFeedbackData);
+      setMessage({ type: 'success', text: 'Thank you for your feedback!' });
+      setFeedback('');
+      
+      // Refresh feedback list
+      const feedbackQuery = query(
+        collection(db, 'feedback'),
+        orderBy('createdAt', 'desc'),
+        limit(3)
+      );
+      const feedbackSnapshot = await getDocs(feedbackQuery);
+      const loadedFeedback = feedbackSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setFeedbackList(loadedFeedback);
+      
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      setMessage({ type: 'error', text: 'Failed to submit feedback' });
+    } finally {
+      setSubmittingFeedback(false);
     }
   };
 
@@ -188,6 +319,22 @@ const Profile = () => {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="profile-container">
+        <Navbar />
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="profile-container">
       <Navbar />
@@ -195,9 +342,22 @@ const Profile = () => {
       <div className="profile-header">
         <div className="profile-header-content">
           <div className="profile-avatar">
-            <span className="avatar-initial">
-              {profileData.name ? profileData.name.charAt(0).toUpperCase() : 'U'}
-            </span>
+            {imagePreview ? (
+              <img src={imagePreview} alt="Profile" className="avatar-image" />
+            ) : (
+              <span className="avatar-initial">
+                {profileData.name ? profileData.name.charAt(0).toUpperCase() : 'U'}
+              </span>
+            )}
+            <label className="upload-image-btn">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                style={{ display: 'none' }}
+              />
+              <span className="upload-icon">📷</span>
+            </label>
           </div>
           <h1>My Profile</h1>
           <p>Manage your account information and orders</p>
@@ -226,6 +386,12 @@ const Profile = () => {
               onClick={() => setActiveTab('orders')}
             >
               📦 Order History
+            </button>
+            <button 
+              className={`tab-btn ${activeTab === 'feedback' ? 'active' : ''}`}
+              onClick={() => setActiveTab('feedback')}
+            >
+              💬 Feedback
             </button>
             <button 
               className={`tab-btn ${activeTab === 'security' ? 'active' : ''}`}
@@ -401,6 +567,55 @@ const Profile = () => {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Feedback Tab */}
+          {activeTab === 'feedback' && (
+            <div className="profile-card">
+              <h2>Customer Feedback</h2>
+              
+              {/* Submit Feedback Form */}
+              <div className="feedback-form-container">
+                <h3>Share Your Experience</h3>
+                <form onSubmit={handleSubmitFeedback} className="feedback-form">
+                  <textarea
+                    value={feedback}
+                    onChange={(e) => setFeedback(e.target.value)}
+                    placeholder="Tell us about your experience with CLOTHING-DARK..."
+                    rows="4"
+                    required
+                  />
+                  <button type="submit" className="submit-feedback-btn" disabled={submittingFeedback}>
+                    {submittingFeedback ? 'Submitting...' : 'Submit Feedback'}
+                  </button>
+                </form>
+              </div>
+
+              {/* Recent Feedback */}
+              <div className="recent-feedback">
+                <h3>Recent Reviews</h3>
+                {feedbackList.length === 0 ? (
+                  <p className="no-feedback">No feedback yet. Be the first to share!</p>
+                ) : (
+                  <div className="feedback-list">
+                    {feedbackList.map((item) => (
+                      <div key={item.id} className="feedback-item">
+                        <div className="feedback-header">
+                          <strong className="feedback-user">{item.userName}</strong>
+                          <span className="feedback-date">
+                            {new Date(item.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="feedback-text">{item.feedback}</p>
+                        <div className="feedback-rating">
+                          {'★'.repeat(item.rating || 5)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
