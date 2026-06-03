@@ -16,7 +16,7 @@ const WelcomePage = () => {
   return (
     <div className="welcome-container">
       <Navbar />
-      
+
       {/* Hero Section - Left Aligned */}
       <div className="hero-section">
         <div className="hero-content">
@@ -24,7 +24,7 @@ const WelcomePage = () => {
             <div className="badge">PREMIUM COLLECTION 2024</div>
             <h1 className="brand-name">CLOTHING<span>&nbsp;-&nbsp;DARK </span></h1>
             <p className="brand-description">
-              Experience the epitome of elegance with our premium black collection. 
+              Experience the epitome of elegance with our premium black collection.
               Crafted from the finest materials for the perfect blend of comfort and style.
             </p>
             <div className="features-list">
@@ -42,14 +42,14 @@ const WelcomePage = () => {
               </div>
             </div>
             <div className="cta-buttons">
-              <button 
-                className="btn btn-primary" 
+              <button
+                className="btn btn-primary"
                 onClick={() => navigate('/signup')}
               >
                 Shop Now →
               </button>
-              <button 
-                className="btn btn-secondary" 
+              <button
+                className="btn btn-secondary"
                 onClick={() => navigate('/login')}
               >
                 Sign In
@@ -57,19 +57,19 @@ const WelcomePage = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Hero Images - New Layout with your images */}
         <div className="hero-images-layout">
           {/* Large Image on the right */}
           <div className="large-image-container">
             <div className="image-card large-image-card">
               <div className="image-wrapper">
-                <img 
+                <img
                   src={largeImage}
                   alt="Premium Black Collection"
                   className="hero-img large-img"
                 />
-                
+
               </div>
             </div>
           </div>
@@ -78,22 +78,22 @@ const WelcomePage = () => {
           <div className="small-images-stack">
             <div className="image-card small-image-card">
               <div className="image-wrapper">
-                <img 
+                <img
                   src={smallImage1}
                   alt="Classic Black Tee"
                   className="hero-img small1-img"
                 />
-                
+
               </div>
             </div>
             <div className="image-card small-image-card">
               <div className="image-wrapper">
-                <img 
+                <img
                   src={smallImage2}
                   alt="Modern Fit Shirt"
                   className="hero-img small2-img"
                 />
-                
+
               </div>
             </div>
           </div>
@@ -109,7 +109,7 @@ const WelcomePage = () => {
         <div className="products-grid">
           <div className="product-card">
             <div className="product-image">
-              <img 
+              <img
                 src={smallImage1}
                 alt="Classic Black T-Shirt"
               />
@@ -129,7 +129,7 @@ const WelcomePage = () => {
 
           <div className="product-card">
             <div className="product-image">
-              <img 
+              <img
                 src={smallImage2}
                 alt="Formal Black Shirt"
               />
@@ -149,7 +149,27 @@ const WelcomePage = () => {
 
           <div className="product-card">
             <div className="product-image">
-              <img 
+              <img
+                src={smallImage2}
+                alt="Formal Black Shirt"
+              />
+              <div className="product-overlay">
+                <button className="quick-view">Quick View</button>
+              </div>
+            </div>
+            <div className="product-info">
+              <h3>Formal Black Shirt</h3>
+              <p>Perfect for office and special occasions</p>
+              <div className="price">$49.99</div>
+              <button className="add-to-cart" onClick={() => navigate('/signup')}>
+                Shop Now
+              </button>
+            </div>
+          </div>
+
+          <div className="product-card">
+            <div className="product-image">
+              <img
                 src={largeImage}
                 alt="Premium Black Tee"
               />

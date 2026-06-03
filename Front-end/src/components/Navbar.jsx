@@ -8,6 +8,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [cartCount, setCartCount] = useState(0)
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
+  const [activeLink, setActiveLink] = useState('')
 
   // Handle scroll effect
   useEffect(() => {
@@ -34,7 +35,36 @@ const Navbar = () => {
     }
   }
 
-  // Update current path when URL changes
+  // Update current path and active link when URL changes
+  useEffect(() => {
+    const path = window.location.pathname
+    setCurrentPath(path)
+    
+    // Set active link based on current path
+    if (path === '/') {
+      setActiveLink('home')
+    } else if (path === '/shop') {
+      setActiveLink('shop')
+    } else if (path === '/cart') {
+      setActiveLink('cart')
+    } else if (path === '/features') {
+      setActiveLink('features')
+    } else if (path === '/about') {
+      setActiveLink('about')
+    } else if (path === '/contact') {
+      setActiveLink('contact')
+    } else if (path === '/profile') {
+      setActiveLink('profile')
+    } else if (path === '/login') {
+      setActiveLink('login')
+    } else if (path === '/signup') {
+      setActiveLink('signup')
+    } else {
+      setActiveLink('')
+    }
+  }, [window.location.pathname])
+
+  // Listen for popstate events (browser back/forward)
   useEffect(() => {
     const handleLocationChange = () => {
       setCurrentPath(window.location.pathname)
@@ -65,46 +95,55 @@ const Navbar = () => {
 
   // Navigation functions using direct browser navigation
   const goToHome = () => {
+    setActiveLink('home')
     setIsMobileMenuOpen(false)
     window.location.href = '/'
   }
 
   const goToShop = () => {
+    setActiveLink('shop')
     setIsMobileMenuOpen(false)
     window.location.href = '/shop'
   }
 
   const goToCart = () => {
+    setActiveLink('cart')
     setIsMobileMenuOpen(false)
     window.location.href = '/cart'
   }
 
   const goToFeatures = () => {
+    setActiveLink('features')
     setIsMobileMenuOpen(false)
     window.location.href = '/features'
   }
 
   const goToAbout = () => {
+    setActiveLink('about')
     setIsMobileMenuOpen(false)
     window.location.href = '/about'
   }
 
   const goToContact = () => {
+    setActiveLink('contact')
     setIsMobileMenuOpen(false)
     window.location.href = '/contact'
   }
 
   const goToLogin = () => {
+    setActiveLink('login')
     setIsMobileMenuOpen(false)
     window.location.href = '/login'
   }
 
   const goToSignup = () => {
+    setActiveLink('signup')
     setIsMobileMenuOpen(false)
     window.location.href = '/signup'
   }
 
   const goToProfile = () => {
+    setActiveLink('profile')
     setIsMobileMenuOpen(false)
     window.location.href = '/profile'
   }
@@ -151,27 +190,47 @@ const Navbar = () => {
           <div className="navbar-menu">
             <ul className="nav-links">
               <li>
-                <a href="/" onClick={(e) => { e.preventDefault(); goToHome(); }}>
+                <a 
+                  href="/" 
+                  className={activeLink === 'home' ? 'active' : ''}
+                  onClick={(e) => { e.preventDefault(); goToHome(); }}
+                >
                   Home
                 </a>
               </li>
               <li>
-                <a href="/shop" onClick={(e) => { e.preventDefault(); goToShop(); }}>
+                <a 
+                  href="/shop" 
+                  className={activeLink === 'shop' ? 'active' : ''}
+                  onClick={(e) => { e.preventDefault(); goToShop(); }}
+                >
                   Shop
                 </a>
               </li>
               <li>
-                <a href="/features" onClick={(e) => { e.preventDefault(); goToFeatures(); }}>
+                <a 
+                  href="/features" 
+                  className={activeLink === 'features' ? 'active' : ''}
+                  onClick={(e) => { e.preventDefault(); goToFeatures(); }}
+                >
                   Features
                 </a>
               </li>
               <li>
-                <a href="/about" onClick={(e) => { e.preventDefault(); goToAbout(); }}>
+                <a 
+                  href="/about" 
+                  className={activeLink === 'about' ? 'active' : ''}
+                  onClick={(e) => { e.preventDefault(); goToAbout(); }}
+                >
                   About Us
                 </a>
               </li>
               <li>
-                <a href="/contact" onClick={(e) => { e.preventDefault(); goToContact(); }}>
+                <a 
+                  href="/contact" 
+                  className={activeLink === 'contact' ? 'active' : ''}
+                  onClick={(e) => { e.preventDefault(); goToContact(); }}
+                >
                   Contact
                 </a>
               </li>
@@ -180,7 +239,10 @@ const Navbar = () => {
 
           {/* Auth Buttons and Cart */}
           <div className="navbar-auth">
-            <button className="auth-btn cart-btn" onClick={goToCart}>
+            <button 
+              className={`auth-btn cart-btn ${activeLink === 'cart' ? 'active' : ''}`}
+              onClick={goToCart}
+            >
               🛒 Cart
               {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
             </button>
@@ -213,10 +275,16 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <button className="auth-btn login-btn" onClick={goToLogin}>
+                <button 
+                  className={`auth-btn login-btn ${activeLink === 'login' ? 'active' : ''}`}
+                  onClick={goToLogin}
+                >
                   Sign In
                 </button>
-                <button className="auth-btn signup-btn" onClick={goToSignup}>
+                <button 
+                  className={`auth-btn signup-btn ${activeLink === 'signup' ? 'active' : ''}`}
+                  onClick={goToSignup}
+                >
                   Get Started
                 </button>
               </>
@@ -237,12 +305,60 @@ const Navbar = () => {
         {/* Mobile Menu */}
         <div className={`mobile-menu ${isMobileMenuOpen ? 'active' : ''}`}>
           <ul className="mobile-nav-links">
-            <li><a href="/" onClick={(e) => { e.preventDefault(); goToHome(); }}>Home</a></li>
-            <li><a href="/shop" onClick={(e) => { e.preventDefault(); goToShop(); }}>Shop</a></li>
-            <li><a href="/cart" onClick={(e) => { e.preventDefault(); goToCart(); }}>Cart {cartCount > 0 && `(${cartCount})`}</a></li>
-            <li><a href="/features" onClick={(e) => { e.preventDefault(); goToFeatures(); }}>Features</a></li>
-            <li><a href="/about" onClick={(e) => { e.preventDefault(); goToAbout(); }}>About Us</a></li>
-            <li><a href="/contact" onClick={(e) => { e.preventDefault(); goToContact(); }}>Contact</a></li>
+            <li>
+              <a 
+                href="/" 
+                className={activeLink === 'home' ? 'active' : ''}
+                onClick={(e) => { e.preventDefault(); goToHome(); }}
+              >
+                Home
+              </a>
+            </li>
+            <li>
+              <a 
+                href="/shop" 
+                className={activeLink === 'shop' ? 'active' : ''}
+                onClick={(e) => { e.preventDefault(); goToShop(); }}
+              >
+                Shop
+              </a>
+            </li>
+            <li>
+              <a 
+                href="/cart" 
+                className={activeLink === 'cart' ? 'active' : ''}
+                onClick={(e) => { e.preventDefault(); goToCart(); }}
+              >
+                Cart {cartCount > 0 && `(${cartCount})`}
+              </a>
+            </li>
+            <li>
+              <a 
+                href="/features" 
+                className={activeLink === 'features' ? 'active' : ''}
+                onClick={(e) => { e.preventDefault(); goToFeatures(); }}
+              >
+                Features
+              </a>
+            </li>
+            <li>
+              <a 
+                href="/about" 
+                className={activeLink === 'about' ? 'active' : ''}
+                onClick={(e) => { e.preventDefault(); goToAbout(); }}
+              >
+                About Us
+              </a>
+            </li>
+            <li>
+              <a 
+                href="/contact" 
+                className={activeLink === 'contact' ? 'active' : ''}
+                onClick={(e) => { e.preventDefault(); goToContact(); }}
+              >
+                Contact
+              </a>
+            </li>
           </ul>
           <div className="mobile-auth">
             {isAuthenticated ? (
@@ -254,14 +370,27 @@ const Navbar = () => {
                     <div className="mobile-user-email">{user?.email}</div>
                   </div>
                 </div>
-                <button className="auth-btn logout-btn mobile-logout" onClick={handleSignOut}>
+                <button 
+                  className="auth-btn logout-btn mobile-logout" 
+                  onClick={handleSignOut}
+                >
                   Sign Out
                 </button>
               </>
             ) : (
               <>
-                <button className="auth-btn login-btn" onClick={goToLogin}>Sign In</button>
-                <button className="auth-btn signup-btn" onClick={goToSignup}>Get Started</button>
+                <button 
+                  className={`auth-btn login-btn ${activeLink === 'login' ? 'active' : ''}`}
+                  onClick={goToLogin}
+                >
+                  Sign In
+                </button>
+                <button 
+                  className={`auth-btn signup-btn ${activeLink === 'signup' ? 'active' : ''}`}
+                  onClick={goToSignup}
+                >
+                  Get Started
+                </button>
               </>
             )}
           </div>

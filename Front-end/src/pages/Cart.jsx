@@ -12,6 +12,9 @@ const Cart = () => {
   const [promoError, setPromoError] = useState('')
   const [promoSuccess, setPromoSuccess] = useState('')
   const [removingId, setRemovingId] = useState(null)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [paymentMethod, setPaymentMethod] = useState('')
+  const [processingOrder, setProcessingOrder] = useState(false)
 
   // Load cart from localStorage on component mount
   const loadCart = () => {
@@ -50,29 +53,34 @@ const Cart = () => {
     }
   }, [cartItems, loading])
 
-  // Update item quantity
-  const updateQuantity = (id, newQuantity) => {
+  // Update item quantity - FIXED
+  const updateQuantity = (id, selectedSize, newQuantity) => {
     if (newQuantity < 1) return
     setCartItems(prevItems =>
       prevItems.map(item =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
+        item.id === id && item.selectedSize === selectedSize 
+          ? { ...item, quantity: newQuantity } 
+          : item
       )
     )
   }
 
-  // Remove item from cart with animation
-  const removeItem = (id) => {
-    setRemovingId(id)
+  // Remove item from cart with animation - FIXED
+  const removeItem = (id, selectedSize) => {
+    setRemovingId(`${id}-${selectedSize}`)
     setTimeout(() => {
-      setCartItems(prev => prev.filter(item => item.id !== id))
+      setCartItems(prev => prev.filter(item => !(item.id === id && item.selectedSize === selectedSize)))
       setRemovingId(null)
     }, 300)
   }
 
-  // Clear entire cart
+  // Clear entire cart - FIXED
   const clearCart = () => {
     if (window.confirm('Are you sure you want to clear your entire cart?')) {
       setCartItems([])
+      localStorage.removeItem('cart')
+      window.dispatchEvent(new Event('cartUpdated'))
+      alert('Cart cleared successfully!')
     }
   }
 
@@ -91,9 +99,11 @@ const Cart = () => {
       setDiscount(discountPercent)
       setPromoSuccess(`Promo code applied! You saved ${discountPercent}%`)
       setPromoError('')
+      setTimeout(() => setPromoSuccess(''), 3000)
     } else {
       setPromoError('Invalid promo code')
       setPromoSuccess('')
+      setTimeout(() => setPromoError(''), 3000)
     }
   }
 
@@ -103,41 +113,56 @@ const Cart = () => {
   const shipping = subtotal > 0 ? (subtotal > 100 ? 0 : 9.99) : 0
   const total = subtotal - discountAmount + shipping
 
-  // Proceed to checkout - Clear cart only after successful checkout
-  const handleCheckout = () => {
+  // Open payment modal
+  const openPaymentModal = () => {
     if (cartItems.length === 0) {
       alert('Your cart is empty. Add some items first!')
       return
     }
-    
-    // Show order confirmation
-    const confirmCheckout = window.confirm(
-      `Order Summary:\n\n` +
-      `Total Items: ${cartItems.length}\n` +
-      `Subtotal: $${subtotal.toFixed(2)}\n` +
-      `Discount: $${discountAmount.toFixed(2)}\n` +
-      `Shipping: ${shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}\n` +
-      `Total Amount: $${total.toFixed(2)}\n\n` +
-      `Click OK to place your order.`
-    )
-    
-    if (confirmCheckout) {
-      alert(`Order placed successfully! Total: $${total.toFixed(2)}\n\nThank you for shopping at CLOTHING-DARK!\n\nYour order will be delivered within 3-5 business days.`)
+    setShowPaymentModal(true)
+  }
+
+  // Close payment modal
+  const closePaymentModal = () => {
+    setShowPaymentModal(false)
+    setPaymentMethod('')
+  }
+
+  // Process order with payment
+  const processOrder = () => {
+    if (!paymentMethod) {
+      alert('Please select a payment method')
+      return
+    }
+
+    setProcessingOrder(true)
+
+    // Simulate payment processing
+    setTimeout(() => {
+      // Show success message
+      alert(`✅ Order Placed Successfully!\n\n` +
+        `Payment Method: ${paymentMethod}\n` +
+        `Total Amount: $${total.toFixed(2)}\n\n` +
+        `Thank you for shopping at CLOTHING-DARK!\n` +
+        `Your order will be delivered within 3-5 business days.\n\n` +
+        `Order confirmation has been sent to your email.`)
       
-      // Clear cart from state
+      // Clear cart from state and localStorage
       setCartItems([])
-      
-      // Clear cart from localStorage
       localStorage.removeItem('cart')
       
       // Dispatch event to update navbar cart count
       window.dispatchEvent(new Event('cartUpdated'))
       
+      // Close modal
+      closePaymentModal()
+      setProcessingOrder(false)
+      
       // Redirect to home page after 2 seconds
       setTimeout(() => {
         navigate('/')
       }, 2000)
-    }
+    }, 2000)
   }
 
   if (loading) {
@@ -189,7 +214,8 @@ const Cart = () => {
               {cartItems.map((item, index) => (
                 <div 
                   key={`${item.id}-${item.selectedSize}`}
-                  className={`cart-item ${removingId === item.id ? 'removing' : ''}`}
+                  id={`cart-item-${item.id}-${item.selectedSize}`}
+                  className={`cart-item ${removingId === `${item.id}-${item.selectedSize}` ? 'removing' : ''}`}
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <div className="cart-item-product">
@@ -210,14 +236,14 @@ const Cart = () => {
                   <div className="cart-item-quantity">
                     <button 
                       className="qty-btn"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity - 1)}
                     >
                       -
                     </button>
                     <span className="quantity">{item.quantity}</span>
                     <button 
                       className="qty-btn"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => updateQuantity(item.id, item.selectedSize, item.quantity + 1)}
                     >
                       +
                     </button>
@@ -230,7 +256,7 @@ const Cart = () => {
                   <div className="cart-item-remove">
                     <button 
                       className="remove-btn"
-                      onClick={() => removeItem(item.id)}
+                      onClick={() => removeItem(item.id, item.selectedSize)}
                     >
                       ×
                     </button>
@@ -300,7 +326,7 @@ const Cart = () => {
             </div>
             
             {/* Checkout Button */}
-            <button className="checkout-btn" onClick={handleCheckout}>
+            <button className="checkout-btn" onClick={openPaymentModal}>
               Proceed to Checkout
             </button>
             
@@ -314,6 +340,118 @@ const Cart = () => {
                 <span>💳 Apple Pay</span>
                 <span>💳 Google Pay</span>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Modal */}
+      {showPaymentModal && (
+        <div className="modal-overlay" onClick={closePaymentModal}>
+          <div className="payment-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="payment-modal-header">
+              <h2>Select Payment Method</h2>
+              <button className="modal-close-btn" onClick={closePaymentModal}>×</button>
+            </div>
+            
+            <div className="payment-modal-body">
+              <div className="order-summary-mini">
+                <h3>Order Summary</h3>
+                <div className="summary-row">
+                  <span>Total Items:</span>
+                  <span>{cartItems.length}</span>
+                </div>
+                <div className="summary-row">
+                  <span>Subtotal:</span>
+                  <span>${subtotal.toFixed(2)}</span>
+                </div>
+                {discount > 0 && (
+                  <div className="summary-row">
+                    <span>Discount:</span>
+                    <span>-${discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="summary-row total">
+                  <span>Total Amount:</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+              </div>
+              
+              <div className="payment-options">
+                <h3>Payment Methods</h3>
+                <label className={`payment-option ${paymentMethod === 'Credit Card' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="Credit Card"
+                    checked={paymentMethod === 'Credit Card'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  />
+                  <span className="payment-icon">💳</span>
+                  <div className="payment-details">
+                    <strong>Credit / Debit Card</strong>
+                    <small>Visa, Mastercard, Amex, Discover</small>
+                  </div>
+                </label>
+                
+                <label className={`payment-option ${paymentMethod === 'PayPal' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="PayPal"
+                    checked={paymentMethod === 'PayPal'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  />
+                  <span className="payment-icon">💰</span>
+                  <div className="payment-details">
+                    <strong>PayPal</strong>
+                    <small>Fast and secure checkout</small>
+                  </div>
+                </label>
+                
+                <label className={`payment-option ${paymentMethod === 'Apple Pay' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="Apple Pay"
+                    checked={paymentMethod === 'Apple Pay'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  />
+                  <span className="payment-icon">📱</span>
+                  <div className="payment-details">
+                    <strong>Apple Pay</strong>
+                    <small>Pay with your Apple device</small>
+                  </div>
+                </label>
+                
+                <label className={`payment-option ${paymentMethod === 'Google Pay' ? 'selected' : ''}`}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="Google Pay"
+                    checked={paymentMethod === 'Google Pay'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                  />
+                  <span className="payment-icon">🤖</span>
+                  <div className="payment-details">
+                    <strong>Google Pay</strong>
+                    <small>Quick and easy checkout</small>
+                  </div>
+                </label>
+              </div>
+            </div>
+            
+            <div className="payment-modal-footer">
+              <button className="cancel-btn" onClick={closePaymentModal}>
+                Cancel
+              </button>
+              <button 
+                className="confirm-btn" 
+                onClick={processOrder}
+                disabled={!paymentMethod || processingOrder}
+              >
+                {processingOrder ? 'Processing...' : `Pay $${total.toFixed(2)}`}
+              </button>
             </div>
           </div>
         </div>

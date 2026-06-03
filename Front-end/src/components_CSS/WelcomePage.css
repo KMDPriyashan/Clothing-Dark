@@ -244,10 +244,11 @@ html {
   font-size: 1.1rem;
 }
 
+/* Products Grid - 3 cards in one line */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 40px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -613,8 +614,39 @@ html {
     max-width: 220px;
   }
   
-  .small-img {
+  .small1-img,
+  .small2-img {
     height: 195px;
+  }
+
+  /* Keep 3 cards on tablet */
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  
+  .product-image {
+    height: 280px;
+  }
+}
+
+@media (max-width: 900px) {
+  /* Still 3 cards but smaller */
+  .products-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+  }
+  
+  .product-image {
+    height: 250px;
+  }
+  
+  .product-info h3 {
+    font-size: 1rem;
+  }
+  
+  .price {
+    font-size: 1.1rem;
   }
 }
 
@@ -639,7 +671,8 @@ html {
     gap: 15px;
   }
   
-  .small-img {
+  .small1-img,
+  .small2-img {
     height: 200px;
   }
   
@@ -647,8 +680,14 @@ html {
     font-size: 2.5rem;
   }
   
+  /* Switch to 1 column on mobile */
   .products-grid {
     grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  
+  .product-image {
+    height: 320px;
   }
 
   .features-grid {
@@ -686,7 +725,8 @@ html {
     gap: 10px;
   }
   
-  .small-img {
+  .small1-img,
+  .small2-img {
     height: 160px;
   }
   
@@ -710,5 +750,21 @@ html {
   
   .hero-content {
     padding: 60px 5%;
+  }
+  
+  .product-image {
+    height: 280px;
+  }
+  
+  .product-info h3 {
+    font-size: 1rem;
+  }
+  
+  .price {
+    font-size: 1rem;
+  }
+  
+  .add-to-cart {
+    padding: 10px;
   }
 }

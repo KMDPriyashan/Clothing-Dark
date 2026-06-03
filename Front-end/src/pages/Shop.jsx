@@ -30,7 +30,6 @@ const Shop = () => {
   // Save cart to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart))
-    // Dispatch custom event to update navbar cart count
     window.dispatchEvent(new Event('cartUpdated'))
   }, [cart])
 
@@ -264,10 +263,7 @@ const Shop = () => {
       addedAt: new Date().toISOString()
     }
     
-    // Get existing cart from localStorage
     const existingCart = JSON.parse(localStorage.getItem('cart') || '[]')
-    
-    // Check if item already exists in cart (same id and size)
     const existingItemIndex = existingCart.findIndex(
       item => item.id === cartItem.id && item.selectedSize === cartItem.selectedSize
     )
@@ -278,13 +274,9 @@ const Shop = () => {
       existingCart.push(cartItem)
     }
     
-    // Save to localStorage
     localStorage.setItem('cart', JSON.stringify(existingCart))
-    
-    // Update state
     setCart(existingCart)
     
-    // Show notification
     setShowNotification(true)
     setTimeout(() => setShowNotification(false), 3000)
     
@@ -386,9 +378,11 @@ const Shop = () => {
               {!product.inStock && (
                 <div className="soldout-badge">Out of Stock</div>
               )}
-              <div className="product-image">
-                <img src={product.image} alt={product.name} />
-                <div className="product-actions">
+              
+              {/* Redesigned Card Layout - Image Left, Content Right */}
+              <div className="product-card-inner">
+                <div className="product-image-section">
+                  <img src={product.image} alt={product.name} />
                   <button 
                     className="quick-view-btn"
                     onClick={() => quickView(product)}
@@ -396,35 +390,40 @@ const Shop = () => {
                     Quick View
                   </button>
                 </div>
-              </div>
-              <div className="product-details">
-                <h3 className="product-name">{product.name}</h3>
-                <div className="product-category">{product.category}</div>
-                <div className="product-rating">
-                  <span className="stars">
-                    {'★'.repeat(Math.floor(product.rating))}
-                    {'☆'.repeat(5 - Math.floor(product.rating))}
-                  </span>
-                  <span className="reviews">({product.reviews})</span>
+                
+                <div className="product-info-section">
+                  <div className="product-category">{product.category}</div>
+                  <h3 className="product-name">{product.name}</h3>
+                  <p className="product-description">{product.description.substring(0, 60)}...</p>
+                  
+                  <div className="product-rating">
+                    <span className="stars">
+                      {'★'.repeat(Math.floor(product.rating))}
+                      {'☆'.repeat(5 - Math.floor(product.rating))}
+                    </span>
+                    <span className="reviews">({product.reviews})</span>
+                  </div>
+                  
+                  <div className="product-price">
+                    <span className="current-price">${product.price}</span>
+                    <span className="original-price">${product.originalPrice}</span>
+                  </div>
+                  
+                  <div className="product-sizes">
+                    {product.sizes.slice(0, 4).map((size) => (
+                      <span key={size} className="size-tag">{size}</span>
+                    ))}
+                    {product.sizes.length > 4 && <span className="size-tag">+{product.sizes.length - 4}</span>}
+                  </div>
+                  
+                  <button 
+                    className={`add-to-cart-btn ${!product.inStock ? 'disabled' : ''}`}
+                    onClick={() => product.inStock && addToCart(product)}
+                    disabled={!product.inStock}
+                  >
+                    {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                  </button>
                 </div>
-                <p className="product-description">{product.description.substring(0, 80)}...</p>
-                <div className="product-price">
-                  <span className="current-price">${product.price}</span>
-                  <span className="original-price">${product.originalPrice}</span>
-                </div>
-                <div className="product-sizes">
-                  {product.sizes.slice(0, 4).map((size) => (
-                    <span key={size} className="size-tag">{size}</span>
-                  ))}
-                  {product.sizes.length > 4 && <span className="size-tag">+{product.sizes.length - 4}</span>}
-                </div>
-                <button 
-                  className={`add-to-cart-btn ${!product.inStock ? 'disabled' : ''}`}
-                  onClick={() => product.inStock && addToCart(product)}
-                  disabled={!product.inStock}
-                >
-                  {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                </button>
               </div>
             </div>
           ))}
