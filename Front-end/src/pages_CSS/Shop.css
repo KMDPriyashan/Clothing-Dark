@@ -902,3 +902,154 @@
     font-size: 0.8rem;
   }
 }
+
+/* Shop Footer */
+.shop-footer {
+  background: #0a0a0a;
+  color: white;
+  padding: 60px 5% 20px;
+  margin-top: 0;
+}
+
+.shop-footer .footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+  border-bottom: 1px solid #222;
+}
+
+.shop-footer .footer-section h3 {
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  letter-spacing: 1px;
+}
+
+.shop-footer .footer-section h4 {
+  font-size: 1rem;
+  margin-bottom: 15px;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.shop-footer .footer-section p {
+  color: #888;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.shop-footer .footer-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.shop-footer .footer-section ul li {
+  color: #888;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.shop-footer .footer-section ul li:hover {
+  color: white;
+  transform: translateX(5px);
+}
+
+.footer-social {
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.footer-social span {
+  color: #888;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.footer-social span:hover {
+  color: white;
+  transform: translateY(-2px);
+}
+
+.payment-icons {
+  display: flex;
+  gap: 12px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.payment-icons span {
+  background: #1a1a1a;
+  padding: 5px 12px;
+  border-radius: 5px;
+  font-size: 0.8rem;
+  color: #aaa;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.payment-icons span:hover {
+  background: #333;
+  color: white;
+}
+
+.shop-footer .footer-bottom {
+  text-align: center;
+  padding-top: 30px;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.shop-footer .footer-bottom p {
+  margin: 5px 0;
+}
+
+.footer-credit {
+  font-size: 0.75rem;
+  color: #555;
+}
+
+/* Responsive Footer */
+@media (max-width: 768px) {
+  .shop-footer .footer-content {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 30px;
+  }
+  
+  .footer-social {
+    justify-content: center;
+  }
+  
+  .payment-icons {
+    justify-content: center;
+  }
+  
+  .shop-footer .footer-section ul li:hover {
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 480px) {
+  .shop-footer {
+    padding: 40px 5% 20px;
+  }
+  
+  .footer-social {
+    gap: 10px;
+  }
+  
+  .payment-icons {
+    gap: 8px;
+  }
+  
+  .payment-icons span {
+    padding: 4px 10px;
+    font-size: 0.7rem;
+  }
+}

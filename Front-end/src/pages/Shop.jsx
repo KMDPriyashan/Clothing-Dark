@@ -379,7 +379,6 @@ const Shop = () => {
                 <div className="soldout-badge">Out of Stock</div>
               )}
               
-              {/* Redesigned Card Layout - Image Left, Content Right */}
               <div className="product-card-inner">
                 <div className="product-image-section">
                   <img src={product.image} alt={product.name} />
@@ -538,6 +537,64 @@ const Shop = () => {
           <p>100% secure transactions</p>
         </div>
       </div>
+
+      {/* Footer Section */}
+      <footer className="shop-footer">
+        <div className="footer-content">
+          <div className="footer-section">
+            <h3>CLOTHING-DARK</h3>
+            <p>Premium black clothing for the modern individual</p>
+            <div className="footer-social">
+              <span>📷 Instagram</span>
+              <span>📘 Facebook</span>
+              <span>🐦 Twitter</span>
+              <span>📌 Pinterest</span>
+            </div>
+          </div>
+          
+          <div className="footer-section">
+            <h4>Quick Links</h4>
+            <ul>
+              <li onClick={() => navigate('/')}>Home</li>
+              <li onClick={() => navigate('/shop')}>Shop</li>
+              <li onClick={() => navigate('/features')}>Features</li>
+              <li onClick={() => navigate('/about')}>About Us</li>
+              <li onClick={() => navigate('/contact')}>Contact</li>
+            </ul>
+          </div>
+          
+          <div className="footer-section">
+            <h4>Customer Service</h4>
+            <ul>
+              <li>FAQ</li>
+              <li>Size Guide</li>
+              <li>Track Order</li>
+              <li>Returns Policy</li>
+              <li>Shipping Info</li>
+            </ul>
+          </div>
+          
+          <div className="footer-section">
+            <h4>Contact Info</h4>
+            <ul>
+              <li>📞 +1 (555) 123-4567</li>
+              <li>✉️ support@clothing-dark.com</li>
+              <li>📍 123 Fashion Avenue, NY</li>
+            </ul>
+            <div className="payment-icons">
+              <span>💳 Visa</span>
+              <span>💳 Mastercard</span>
+              <span>💳 PayPal</span>
+              <span>💳 Amex</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="footer-bottom">
+          <p>&copy; 2024 CLOTHING-DARK. All rights reserved. | Embrace the Darkness</p>
+          <p className="footer-credit">Designed with 🖤 for black fashion lovers</p>
+        </div>
+      </footer>
     </div>
   )
 }
