@@ -41,12 +41,14 @@
 
 .logo-text {
   background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .logo-dark {
   background: linear-gradient(135deg, #000000 0%, #666666 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

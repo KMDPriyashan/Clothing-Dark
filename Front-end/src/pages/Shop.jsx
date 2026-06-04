@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar'
 import '../pages_CSS/Shop.css'
 
 // Import local images
-import largeImage from '../assets/Large.png'
+import largeImage from '../assets/Small01.png'
 import smallImage1 from '../assets/Small01.png'
 import smallImage2 from '../assets/Small02.png'
 
@@ -12,11 +12,15 @@ const Shop = () => {
   const navigate = useNavigate()
   const [cart, setCart] = useState([])
   const [showNotification, setShowNotification] = useState(false)
+  const [notificationMessage, setNotificationMessage] = useState('')
   const [filter, setFilter] = useState('all')
   const [sortBy, setSortBy] = useState('featured')
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [selectedSize, setSelectedSize] = useState('')
   const [quantity, setQuantity] = useState(1)
+  
+  // Track selected sizes for each product card
+  const [selectedSizes, setSelectedSizes] = useState({})
 
   // Load cart from localStorage on component mount
   useEffect(() => {
@@ -238,17 +242,21 @@ const Shop = () => {
     return filtered
   }
 
-  const addToCart = (product) => {
-    let finalSize = 'M'
-    let finalQuantity = 1
+  // Handle size selection for product card
+  const handleSizeSelect = (productId, size) => {
+    setSelectedSizes(prev => ({
+      ...prev,
+      [productId]: size
+    }))
+  }
+
+  // Add to cart directly from product card
+  const addToCartFromCard = (product) => {
+    const selectedSize = selectedSizes[product.id]
     
-    if (selectedProduct) {
-      if (!selectedSize) {
-        alert('Please select a size')
-        return
-      }
-      finalSize = selectedSize
-      finalQuantity = quantity
+    if (!selectedSize) {
+      alert('Please select a size first')
+      return
     }
     
     const cartItem = {
@@ -257,8 +265,8 @@ const Shop = () => {
       price: product.price,
       originalPrice: product.originalPrice,
       image: product.image,
-      selectedSize: finalSize,
-      quantity: finalQuantity,
+      selectedSize: selectedSize,
+      quantity: 1,
       category: product.category,
       addedAt: new Date().toISOString()
     }
@@ -277,16 +285,49 @@ const Shop = () => {
     localStorage.setItem('cart', JSON.stringify(existingCart))
     setCart(existingCart)
     
+    setNotificationMessage(`${product.name} (Size: ${selectedSize}) added to cart!`)
+    setShowNotification(true)
+    setTimeout(() => setShowNotification(false), 3000)
+  }
+
+  // Add to cart from modal
+  const addToCartFromModal = (product) => {
+    if (!selectedSize) {
+      alert('Please select a size')
+      return
+    }
+    
+    const cartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      originalPrice: product.originalPrice,
+      image: product.image,
+      selectedSize: selectedSize,
+      quantity: quantity,
+      category: product.category,
+      addedAt: new Date().toISOString()
+    }
+    
+    const existingCart = JSON.parse(localStorage.getItem('cart') || '[]')
+    const existingItemIndex = existingCart.findIndex(
+      item => item.id === cartItem.id && item.selectedSize === cartItem.selectedSize
+    )
+    
+    if (existingItemIndex > -1) {
+      existingCart[existingItemIndex].quantity += cartItem.quantity
+    } else {
+      existingCart.push(cartItem)
+    }
+    
+    localStorage.setItem('cart', JSON.stringify(existingCart))
+    setCart(existingCart)
+    
+    setNotificationMessage(`${product.name} (Size: ${selectedSize}) added to cart!`)
     setShowNotification(true)
     setTimeout(() => setShowNotification(false), 3000)
     
-    alert(`${product.name} (Size: ${finalSize}) added to cart!`)
-    
-    if (selectedProduct) {
-      setSelectedProduct(null)
-      setSelectedSize('')
-      setQuantity(1)
-    }
+    closeModal()
   }
 
   const quickView = (product) => {
@@ -307,11 +348,12 @@ const Shop = () => {
     <div className="shop-container">
       <Navbar />
       
-      <div className="shop-hero">
+      {/* Animated Hero Section */}
+      <div className="shop-hero animated-hero">
         <div className="shop-hero-content">
-          <h1 className="shop-hero-title">Our Black Collection</h1>
-          <p className="shop-hero-subtitle">Discover the perfect blend of style and comfort</p>
-          <div className="shop-hero-stats">
+          <h1 className="shop-hero-title animate-title">Our Black Collection</h1>
+          <p className="shop-hero-subtitle animate-subtitle">Discover the perfect blend of style and comfort</p>
+          <div className="shop-hero-stats animate-stats">
             <div className="stat">
               <span className="stat-number">{products.length}</span>
               <span className="stat-label">Products</span>
@@ -326,11 +368,16 @@ const Shop = () => {
             </div>
           </div>
         </div>
+        <div className="hero-wave">
+          <svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,64L80,69.3C160,75,320,85,480,80C640,75,800,53,960,48C1120,43,1280,53,1360,58.7L1440,64L1440,120L1360,120C1280,120,1120,120,960,120C800,120,640,120,480,120C320,120,160,120,80,120L0,120Z"></path>
+          </svg>
+        </div>
       </div>
 
       {showNotification && (
         <div className="notification">
-          Item added to cart successfully!
+          ✅ {notificationMessage}
         </div>
       )}
 
@@ -408,19 +455,29 @@ const Shop = () => {
                     <span className="original-price">${product.originalPrice}</span>
                   </div>
                   
+                  {/* Size Selection Section */}
                   <div className="product-sizes">
-                    {product.sizes.slice(0, 4).map((size) => (
-                      <span key={size} className="size-tag">{size}</span>
-                    ))}
-                    {product.sizes.length > 4 && <span className="size-tag">+{product.sizes.length - 4}</span>}
+                    <span className="size-label">Select Size:</span>
+                    <div className="size-options-list">
+                      {product.sizes.map((size) => (
+                        <button
+                          key={size}
+                          className={`size-select-btn ${selectedSizes[product.id] === size ? 'active' : ''}`}
+                          onClick={() => handleSizeSelect(product.id, size)}
+                          disabled={!product.inStock}
+                        >
+                          {size}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   
                   <button 
-                    className={`add-to-cart-btn ${!product.inStock ? 'disabled' : ''}`}
-                    onClick={() => product.inStock && addToCart(product)}
-                    disabled={!product.inStock}
+                    className={`add-to-cart-btn ${!product.inStock || !selectedSizes[product.id] ? 'disabled' : ''}`}
+                    onClick={() => addToCartFromCard(product)}
+                    disabled={!product.inStock || !selectedSizes[product.id]}
                   >
-                    {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                    {!product.inStock ? 'Out of Stock' : !selectedSizes[product.id] ? 'Select Size' : 'Add to Cart'}
                   </button>
                 </div>
               </div>
@@ -429,6 +486,7 @@ const Shop = () => {
         </div>
       </div>
 
+      {/* Quick View Modal */}
       {selectedProduct && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -498,14 +556,8 @@ const Shop = () => {
 
                 <button 
                   className="modal-add-to-cart"
-                  onClick={() => {
-                    if (!selectedSize) {
-                      alert('Please select a size')
-                      return
-                    }
-                    addToCart(selectedProduct)
-                    closeModal()
-                  }}
+                  onClick={() => addToCartFromModal(selectedProduct)}
+                  disabled={!selectedSize}
                 >
                   Add to Cart - ${(selectedProduct.price * quantity).toFixed(2)}
                 </button>

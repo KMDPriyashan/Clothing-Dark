@@ -68,6 +68,7 @@ html {
 
 .brand-name span {
   background: linear-gradient(135deg, #1a1a1a 0%, #666666 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   font-size: 3.2rem;
@@ -766,5 +767,189 @@ html {
   
   .add-to-cart {
     padding: 10px;
+  }
+}
+
+/* Testimonials Section */
+.testimonials-section {
+  padding: 80px 5%;
+  background: #ffffff;
+}
+
+.testimonials-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.testimonial-card {
+  background: #f8f9fa;
+  padding: 30px;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.testimonial-rating {
+  color: #ffc107;
+  font-size: 1.2rem;
+  margin-bottom: 15px;
+}
+
+.testimonial-text {
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  font-style: italic;
+}
+
+.testimonial-author strong {
+  display: block;
+  color: #000;
+  margin-bottom: 5px;
+}
+
+.testimonial-author span {
+  color: #999;
+  font-size: 0.8rem;
+}
+
+/* Brand Story Section */
+.brand-story-section {
+  padding: 80px 5%;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.brand-story-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 50px;
+  max-width: 1400px;
+  margin: 0 auto;
+  align-items: center;
+}
+
+.story-badge {
+  display: inline-block;
+  background: #000;
+  color: white;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+}
+
+.brand-story-text h2 {
+  font-size: 2rem;
+  color: #000;
+  margin-bottom: 20px;
+}
+
+.brand-story-text p {
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.story-btn {
+  margin-top: 20px;
+  padding: 12px 30px;
+  background: #000;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.story-btn:hover {
+  background: #333;
+  transform: translateY(-2px);
+}
+
+.brand-story-image {
+  background: linear-gradient(135deg, #e0e0e0 0%, #cccccc 100%);
+  border-radius: 20px;
+  height: 400px;
+  overflow: hidden;
+}
+
+.story-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: url('https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?ixlib=rb-4.0.3') center/cover;
+}
+
+/* Footer Social and Payment */
+.footer-social {
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.footer-social span {
+  color: #999;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.footer-social span:hover {
+  color: white;
+}
+
+.payment-icons {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.payment-icons span {
+  background: #1a1a1a;
+  padding: 5px 12px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.payment-icons span:hover {
+  background: #333;
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .testimonials-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .brand-story-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .brand-story-image {
+    height: 300px;
+  }
+  
+  .brand-story-text h2 {
+    font-size: 1.5rem;
+  }
+  
+  .footer-social {
+    justify-content: center;
+  }
+  
+  .payment-icons {
+    justify-content: center;
   }
 }
