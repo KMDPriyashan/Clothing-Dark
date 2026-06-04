@@ -797,3 +797,64 @@
     transform: translateY(0);
   }
 }
+
+/* Order Success Notification */
+.order-success-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #4caf50;
+  color: white;
+  padding: 15px 25px;
+  border-radius: 10px;
+  z-index: 10000;
+  animation: slideInRight 0.3s ease-out;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  min-width: 300px;
+}
+
+.order-success-notification.fade-out {
+  animation: fadeOut 0.5s ease-out forwards;
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notification-icon {
+  font-size: 1.5rem;
+}
+
+.notification-content strong {
+  font-size: 1rem;
+}
+
+.notification-content p {
+  font-size: 0.8rem;
+  margin: 2px 0 0;
+  opacity: 0.9;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+}

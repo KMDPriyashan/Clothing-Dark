@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { db, storage, updateUserProfileData } from '../config/firebase';
-import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Navbar from '../components/Navbar';
 import '../pages_CSS/Profile.css';
@@ -42,29 +42,9 @@ const Profile = () => {
   const [feedbackList, setFeedbackList] = useState([]);
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   
-  // Order history (mock data)
-  const [orders, setOrders] = useState([
-    {
-      id: 'ORD-001',
-      date: '2024-01-15',
-      total: 129.99,
-      status: 'Delivered',
-      items: [
-        { name: 'Classic Black T-Shirt', quantity: 2, price: 29.99 },
-        { name: 'Premium Black Tee', quantity: 1, price: 39.99 }
-      ]
-    },
-    {
-      id: 'ORD-002',
-      date: '2024-02-20',
-      total: 89.99,
-      status: 'Shipped',
-      items: [
-        { name: 'Formal Black Shirt', quantity: 1, price: 49.99 },
-        { name: 'Slim Fit Black Shirt', quantity: 1, price: 39.99 }
-      ]
-    }
-  ]);
+  // Order history state
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
 
   // Load user data from Firestore
   useEffect(() => {
@@ -113,6 +93,48 @@ const Profile = () => {
     };
     
     loadUserData();
+  }, [user]);
+
+  // Load orders from Firestore or localStorage
+  useEffect(() => {
+    const loadOrders = async () => {
+      setLoadingOrders(true);
+      
+      if (user) {
+        // Try to load from Firestore
+        try {
+          const ordersQuery = query(
+            collection(db, 'orders'),
+            where('userId', '==', user.uid),
+            orderBy('createdAt', 'desc')
+          );
+          const ordersSnapshot = await getDocs(ordersQuery);
+          const ordersData = ordersSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          
+          if (ordersData.length > 0) {
+            setOrders(ordersData);
+            setLoadingOrders(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Error loading orders from Firestore:', error);
+        }
+      }
+      
+      // Fallback to localStorage
+      const savedOrders = localStorage.getItem('orders');
+      if (savedOrders) {
+        const parsedOrders = JSON.parse(savedOrders);
+        setOrders(parsedOrders);
+      }
+      
+      setLoadingOrders(false);
+    };
+    
+    loadOrders();
   }, [user]);
 
   // Load feedback from Firestore
@@ -316,6 +338,17 @@ const Profile = () => {
         return <span className="status-badge processing">⚙️ Processing</span>;
       default:
         return <span className="status-badge pending">⏳ Pending</span>;
+    }
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch {
+      return dateString;
     }
   };
 
@@ -529,7 +562,11 @@ const Profile = () => {
           {activeTab === 'orders' && (
             <div className="profile-card">
               <h2>Order History</h2>
-              {orders.length === 0 ? (
+              {loadingOrders ? (
+                <div className="loading-orders">
+                  <p>Loading orders...</p>
+                </div>
+              ) : orders.length === 0 ? (
                 <div className="empty-orders">
                   <p>No orders yet.</p>
                   <button className="shop-now-btn" onClick={() => navigate('/shop')}>
@@ -539,17 +576,17 @@ const Profile = () => {
               ) : (
                 <div className="orders-list">
                   {orders.map((order) => (
-                    <div key={order.id} className="order-card">
+                    <div key={order.id || order.orderId} className="order-card">
                       <div className="order-header">
                         <div>
-                          <span className="order-id">Order #{order.id}</span>
-                          <span className="order-date">{order.date}</span>
+                          <span className="order-id">Order #{order.orderId || order.id}</span>
+                          <span className="order-date">{formatDate(order.date || order.createdAt)}</span>
                         </div>
-                        {getStatusBadge(order.status)}
+                        {getStatusBadge(order.status || 'Processing')}
                       </div>
                       
                       <div className="order-items">
-                        {order.items.map((item, idx) => (
+                        {order.items && order.items.map((item, idx) => (
                           <div key={idx} className="order-item">
                             <span>{item.name} x {item.quantity}</span>
                             <span>${(item.price * item.quantity).toFixed(2)}</span>
@@ -559,9 +596,11 @@ const Profile = () => {
                       
                       <div className="order-footer">
                         <div className="order-total">
-                          <strong>Total: ${order.total.toFixed(2)}</strong>
+                          <strong>Total: ${(order.total || order.totalPrice).toFixed(2)}</strong>
                         </div>
-                        <button className="view-order-btn">View Details</button>
+                        <button className="view-order-btn" onClick={() => alert(`Order Details:\nOrder ID: ${order.orderId || order.id}\nStatus: ${order.status || 'Processing'}\nTotal: $${(order.total || order.totalPrice).toFixed(2)}`)}>
+                          View Details
+                        </button>
                       </div>
                     </div>
                   ))}
