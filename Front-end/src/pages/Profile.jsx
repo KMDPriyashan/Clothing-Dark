@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { db, storage, updateUserProfileData } from '../config/firebase';
-import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, addDoc, getDocs, query, orderBy, limit, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import Navbar from '../components/Navbar';
 import '../pages_CSS/Profile.css';
@@ -16,6 +16,7 @@ const Profile = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   
   // Profile form state
   const [profileData, setProfileData] = useState({
@@ -30,6 +31,9 @@ const Profile = () => {
     photoURL: ''
   });
   
+  // Original data for comparison
+  const [originalData, setOriginalData] = useState({});
+  
   // Password change state
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -42,77 +46,95 @@ const Profile = () => {
   const [feedbackList, setFeedbackList] = useState([]);
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
   
-  // Order history (mock data)
-  const [orders, setOrders] = useState([
-    {
-      id: 'ORD-001',
-      date: '2024-01-15',
-      total: 129.99,
-      status: 'Delivered',
-      items: [
-        { name: 'Classic Black T-Shirt', quantity: 2, price: 29.99 },
-        { name: 'Premium Black Tee', quantity: 1, price: 39.99 }
-      ]
-    },
-    {
-      id: 'ORD-002',
-      date: '2024-02-20',
-      total: 89.99,
-      status: 'Shipped',
-      items: [
-        { name: 'Formal Black Shirt', quantity: 1, price: 49.99 },
-        { name: 'Slim Fit Black Shirt', quantity: 1, price: 39.99 }
-      ]
-    }
-  ]);
+  // Order history state
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
 
   // Load user data from Firestore
-  useEffect(() => {
-    const loadUserData = async () => {
-      if (user) {
-        try {
-          const userDocRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userDocRef);
-          
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setProfileData({
-              name: userData.name || user.displayName || '',
-              email: user.email || '',
-              phone: userData.phone || '',
-              address: userData.address || '',
-              city: userData.city || '',
-              postalCode: userData.postalCode || '',
-              country: userData.country || 'Sri Lanka',
-              bio: userData.bio || '',
-              photoURL: userData.photoURL || user.photoURL || ''
-            });
-            if (userData.photoURL) {
-              setImagePreview(userData.photoURL);
-            }
-          } else {
-            setProfileData({
-              name: user.displayName || '',
-              email: user.email || '',
-              phone: '',
-              address: '',
-              city: '',
-              postalCode: '',
-              country: 'Sri Lanka',
-              bio: '',
-              photoURL: user.photoURL || ''
-            });
-            if (user.photoURL) {
-              setImagePreview(user.photoURL);
-            }
+  const loadUserData = async () => {
+    if (user) {
+      try {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const newProfileData = {
+            name: userData.name || user.displayName || '',
+            email: user.email || '',
+            phone: userData.phone || '',
+            address: userData.address || '',
+            city: userData.city || '',
+            postalCode: userData.postalCode || '',
+            country: userData.country || 'Sri Lanka',
+            bio: userData.bio || '',
+            photoURL: userData.photoURL || user.photoURL || ''
+          };
+          setProfileData(newProfileData);
+          setOriginalData(newProfileData);
+          if (userData.photoURL) {
+            setImagePreview(userData.photoURL);
+          } else if (user.photoURL) {
+            setImagePreview(user.photoURL);
           }
-        } catch (error) {
-          console.error('Error loading user data:', error);
+        } else {
+          const newProfileData = {
+            name: user.displayName || '',
+            email: user.email || '',
+            phone: '',
+            address: '',
+            city: '',
+            postalCode: '',
+            country: 'Sri Lanka',
+            bio: '',
+            photoURL: user.photoURL || ''
+          };
+          setProfileData(newProfileData);
+          setOriginalData(newProfileData);
+          if (user.photoURL) {
+            setImagePreview(user.photoURL);
+          }
         }
+      } catch (error) {
+        console.error('Error loading user data:', error);
       }
+    }
+  };
+
+  useEffect(() => {
+    loadUserData();
+  }, [user]);
+
+  // Load orders from localStorage
+  useEffect(() => {
+    const loadOrders = async () => {
+      setLoadingOrders(true);
+      
+      // Load from localStorage (where cart orders are saved)
+      const savedOrders = localStorage.getItem('orders');
+      if (savedOrders) {
+        const parsedOrders = JSON.parse(savedOrders);
+        // Filter orders for current user by email
+        const userOrders = parsedOrders.filter(order => 
+          order.userEmail === user?.email || !order.userEmail
+        );
+        setOrders(userOrders);
+      }
+      
+      setLoadingOrders(false);
     };
     
-    loadUserData();
+    loadOrders();
+    
+    // Listen for order updates
+    const handleOrdersUpdate = () => {
+      loadOrders();
+    };
+    
+    window.addEventListener('ordersUpdated', handleOrdersUpdate);
+    return () => {
+      window.removeEventListener('ordersUpdated', handleOrdersUpdate);
+    };
   }, [user]);
 
   // Load feedback from Firestore
@@ -145,21 +167,36 @@ const Profile = () => {
     }
   }, [isAuthenticated, authLoading, navigate]);
 
-  // Handle profile image upload
+  // Handle profile image upload - SAVES TO FIREBASE STORAGE
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       setUploadingImage(true);
       try {
-        const imageRef = ref(storage, `profile_images/${user.uid}/${Date.now()}_${file.name}`);
+        // Create a unique filename
+        const fileName = `${Date.now()}_${file.name}`;
+        const imageRef = ref(storage, `profile_images/${user.uid}/${fileName}`);
+        
+        // Upload image to Firebase Storage
         await uploadBytes(imageRef, file);
         const photoURL = await getDownloadURL(imageRef);
         
+        // Update state with new image URL
         setProfileImage(photoURL);
-        setImagePreview(URL.createObjectURL(file));
+        setImagePreview(photoURL);
         setProfileData({ ...profileData, photoURL });
         
-        setMessage({ type: 'success', text: 'Image uploaded successfully! Save your profile to update.' });
+        // Save the photoURL to Firestore immediately
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, {
+          photoURL: photoURL,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+        
+        // Update Firebase Auth profile
+        await updateUserProfileData(user, { photoURL: photoURL });
+        
+        setMessage({ type: 'success', text: 'Profile picture updated successfully!' });
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } catch (error) {
         console.error('Error uploading image:', error);
@@ -183,6 +220,17 @@ const Profile = () => {
       ...passwordData,
       [e.target.name]: e.target.value
     });
+  };
+
+  // Toggle edit mode
+  const toggleEditMode = () => {
+    if (isEditing) {
+      // Cancel editing - revert to original data
+      setProfileData(originalData);
+      setImagePreview(originalData.photoURL || '');
+    }
+    setIsEditing(!isEditing);
+    setMessage({ type: '', text: '' });
   };
 
   const updateProfile = async (e) => {
@@ -211,7 +259,17 @@ const Profile = () => {
         updatedAt: new Date().toISOString()
       }, { merge: true });
       
+      // Update original data
+      setOriginalData(profileData);
+      
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setIsEditing(false);
+      
+      // Reload user data to ensure everything is synced
+      setTimeout(() => {
+        loadUserData();
+      }, 500);
+      
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -319,6 +377,17 @@ const Profile = () => {
     }
   };
 
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch {
+      return dateString;
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="profile-container">
@@ -359,7 +428,7 @@ const Profile = () => {
               <span className="upload-icon">📷</span>
             </label>
           </div>
-          <h1>My Profile</h1>
+          <h1>{profileData.name || 'User'}</h1>
           <p>Manage your account information and orders</p>
         </div>
       </div>
@@ -412,116 +481,170 @@ const Profile = () => {
           {/* Profile Information Tab */}
           {activeTab === 'profile' && (
             <div className="profile-card">
-              <h2>Profile Information</h2>
-              <form onSubmit={updateProfile} className="profile-form">
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Full Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={profileData.name}
-                      onChange={handleProfileChange}
-                      placeholder="Enter your full name"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Email Address</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={profileData.email}
-                      disabled
-                      className="disabled-input"
-                    />
-                    <small>Email cannot be changed</small>
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Phone Number</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={profileData.phone}
-                      onChange={handleProfileChange}
-                      placeholder="Enter your phone number"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Bio</label>
-                    <textarea
-                      name="bio"
-                      value={profileData.bio}
-                      onChange={handleProfileChange}
-                      placeholder="Tell us about yourself"
-                      rows="3"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Address</label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={profileData.address}
-                      onChange={handleProfileChange}
-                      placeholder="Street address"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>City</label>
-                    <input
-                      type="text"
-                      name="city"
-                      value={profileData.city}
-                      onChange={handleProfileChange}
-                      placeholder="City"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Postal Code</label>
-                    <input
-                      type="text"
-                      name="postalCode"
-                      value={profileData.postalCode}
-                      onChange={handleProfileChange}
-                      placeholder="Postal code"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Country</label>
-                    <select
-                      name="country"
-                      value={profileData.country}
-                      onChange={handleProfileChange}
-                    >
-                      <option>United States</option>
-                      <option>United Kingdom</option>
-                      <option>Canada</option>
-                      <option>Australia</option>
-                      <option>Sri Lanka</option>
-                      <option>India</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-actions">
-                  <button type="submit" className="save-btn" disabled={loading}>
-                    {loading ? 'Saving...' : 'Save Changes'}
+              <div className="profile-card-header">
+                <h2>Profile Information</h2>
+                {!isEditing ? (
+                  <button className="edit-btn" onClick={toggleEditMode}>
+                    ✏️ Edit Profile
                   </button>
+                ) : (
+                  <div className="edit-actions">
+                    <button className="cancel-btn" onClick={toggleEditMode}>
+                      Cancel
+                    </button>
+                    <button 
+                      className="save-btn" 
+                      onClick={updateProfile}
+                      disabled={loading}
+                    >
+                      {loading ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {!isEditing ? (
+                // Display Mode - Show user data
+                <div className="profile-display">
+                  <div className="display-row">
+                    <div className="display-label">Full Name:</div>
+                    <div className="display-value">{profileData.name || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">Email Address:</div>
+                    <div className="display-value">{profileData.email || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">Phone Number:</div>
+                    <div className="display-value">{profileData.phone || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">Bio:</div>
+                    <div className="display-value">{profileData.bio || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">Address:</div>
+                    <div className="display-value">{profileData.address || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">City:</div>
+                    <div className="display-value">{profileData.city || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">Postal Code:</div>
+                    <div className="display-value">{profileData.postalCode || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">Country:</div>
+                    <div className="display-value">{profileData.country || 'Not set'}</div>
+                  </div>
                 </div>
-              </form>
+              ) : (
+                // Edit Mode - Show form
+                <form onSubmit={updateProfile} className="profile-form">
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Full Name</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={profileData.name}
+                        onChange={handleProfileChange}
+                        placeholder="Enter your full name"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Email Address</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={profileData.email}
+                        disabled
+                        className="disabled-input"
+                      />
+                      <small>Email cannot be changed</small>
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Phone Number</label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={profileData.phone}
+                        onChange={handleProfileChange}
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Bio</label>
+                      <textarea
+                        name="bio"
+                        value={profileData.bio}
+                        onChange={handleProfileChange}
+                        placeholder="Tell us about yourself"
+                        rows="3"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Address</label>
+                      <input
+                        type="text"
+                        name="address"
+                        value={profileData.address}
+                        onChange={handleProfileChange}
+                        placeholder="Street address"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>City</label>
+                      <input
+                        type="text"
+                        name="city"
+                        value={profileData.city}
+                        onChange={handleProfileChange}
+                        placeholder="City"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Postal Code</label>
+                      <input
+                        type="text"
+                        name="postalCode"
+                        value={profileData.postalCode}
+                        onChange={handleProfileChange}
+                        placeholder="Postal code"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Country</label>
+                      <select
+                        name="country"
+                        value={profileData.country}
+                        onChange={handleProfileChange}
+                      >
+                        <option>United States</option>
+                        <option>United Kingdom</option>
+                        <option>Canada</option>
+                        <option>Australia</option>
+                        <option>Sri Lanka</option>
+                        <option>India</option>
+                      </select>
+                    </div>
+                  </div>
+                </form>
+              )}
             </div>
           )}
 
@@ -529,7 +652,11 @@ const Profile = () => {
           {activeTab === 'orders' && (
             <div className="profile-card">
               <h2>Order History</h2>
-              {orders.length === 0 ? (
+              {loadingOrders ? (
+                <div className="loading-orders">
+                  <p>Loading orders...</p>
+                </div>
+              ) : orders.length === 0 ? (
                 <div className="empty-orders">
                   <p>No orders yet.</p>
                   <button className="shop-now-btn" onClick={() => navigate('/shop')}>
@@ -538,18 +665,18 @@ const Profile = () => {
                 </div>
               ) : (
                 <div className="orders-list">
-                  {orders.map((order) => (
-                    <div key={order.id} className="order-card">
+                  {orders.map((order, index) => (
+                    <div key={order.id || index} className="order-card">
                       <div className="order-header">
                         <div>
-                          <span className="order-id">Order #{order.id}</span>
-                          <span className="order-date">{order.date}</span>
+                          <span className="order-id">Order #{order.orderId || order.id}</span>
+                          <span className="order-date">{formatDate(order.date || order.createdAt)}</span>
                         </div>
-                        {getStatusBadge(order.status)}
+                        {getStatusBadge(order.status || 'Processing')}
                       </div>
                       
                       <div className="order-items">
-                        {order.items.map((item, idx) => (
+                        {order.items && order.items.map((item, idx) => (
                           <div key={idx} className="order-item">
                             <span>{item.name} x {item.quantity}</span>
                             <span>${(item.price * item.quantity).toFixed(2)}</span>
@@ -559,9 +686,11 @@ const Profile = () => {
                       
                       <div className="order-footer">
                         <div className="order-total">
-                          <strong>Total: ${order.total.toFixed(2)}</strong>
+                          <strong>Total: ${(order.total || order.totalPrice).toFixed(2)}</strong>
                         </div>
-                        <button className="view-order-btn">View Details</button>
+                        <button className="view-order-btn" onClick={() => alert(`Order Details:\nOrder ID: ${order.orderId || order.id}\nStatus: ${order.status || 'Processing'}\nTotal: $${(order.total || order.totalPrice).toFixed(2)}\nPayment: ${order.paymentMethod || 'N/A'}`)}>
+                          View Details
+                        </button>
                       </div>
                     </div>
                   ))}

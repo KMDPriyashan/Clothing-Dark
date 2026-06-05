@@ -573,3 +573,131 @@
     font-size: 0.8rem;
   }
 }
+
+/* WhatsApp Note */
+.whatsapp-note {
+  font-size: 0.75rem;
+  color: #666;
+  text-align: center;
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+/* Why Choose Us Section */
+.why-choose-section {
+  padding: 80px 5%;
+  background: #f8f9fa;
+}
+
+.why-choose-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.why-choose-card {
+  text-align: center;
+  padding: 40px 30px;
+  background: white;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.why-choose-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.why-choose-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.why-choose-card h3 {
+  font-size: 1.2rem;
+  color: #000;
+  margin-bottom: 10px;
+}
+
+.why-choose-card p {
+  color: #666;
+  line-height: 1.6;
+}
+
+/* WhatsApp Section */
+.whatsapp-section {
+  padding: 80px 5%;
+  background: linear-gradient(135deg, #075e54 0%, #128c7e 100%);
+  text-align: center;
+  color: white;
+}
+
+.whatsapp-content {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.whatsapp-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.whatsapp-content h2 {
+  font-size: 2rem;
+  margin-bottom: 15px;
+}
+
+.whatsapp-content p {
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 30px;
+  font-size: 1.1rem;
+}
+
+.whatsapp-btn {
+  display: inline-block;
+  padding: 14px 35px;
+  background: white;
+  color: #075e54;
+  text-decoration: none;
+  border-radius: 50px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.whatsapp-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .why-choose-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .whatsapp-content h2 {
+    font-size: 1.5rem;
+  }
+  
+  .whatsapp-content p {
+    font-size: 0.9rem;
+  }
+  
+  .whatsapp-btn {
+    padding: 12px 25px;
+    font-size: 0.9rem;
+  }
+}

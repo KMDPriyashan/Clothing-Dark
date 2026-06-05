@@ -245,8 +245,8 @@
 }
 
 .product-image-section img {
-  width: 150%;
-  height: 150%;
+  width: 130%;
+  height: 130%;
   object-fit: cover;
   transition: transform 0.3s ease;
 }
@@ -1051,5 +1051,151 @@
   .payment-icons span {
     padding: 4px 10px;
     font-size: 0.7rem;
+  }
+}
+
+/* Animated Hero Section */
+.shop-hero.animated-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.animate-title {
+  animation: slideInDown 0.8s ease-out;
+}
+
+.animate-subtitle {
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.animate-stats {
+  animation: fadeInUp 0.8s ease-out 0.4s both;
+}
+
+.hero-wave {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.hero-wave svg {
+  position: relative;
+  display: block;
+  width: calc(100% + 1.3px);
+  height: 60px;
+}
+
+.hero-wave svg path {
+  fill: #ffffff;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Size Selection Styles */
+.product-sizes {
+  margin-bottom: 15px;
+}
+
+.size-label {
+  display: block;
+  font-size: 0.7rem;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.size-options-list {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.size-select-btn {
+  padding: 6px 14px;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.size-select-btn:hover:not(:disabled) {
+  background: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+.size-select-btn.active {
+  background: #000000;
+  color: white;
+  border-color: #000000;
+}
+
+.size-select-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Add to Cart Button State */
+.add-to-cart-btn.disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.add-to-cart-btn.disabled:hover {
+  transform: none;
+  background: #ccc;
+}
+
+/* Notification Enhancement */
+.notification {
+  position: fixed;
+  top: 100px;
+  right: 20px;
+  background: #000000;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  z-index: 1000;
+  animation: slideInRight 0.3s ease-out;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  font-weight: 500;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .size-options-list {
+    justify-content: center;
+  }
+  
+  .hero-wave svg {
+    height: 40px;
   }
 }

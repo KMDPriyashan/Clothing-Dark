@@ -46,13 +46,30 @@ const Contact = () => {
     e.preventDefault()
     setLoading(true)
     
-    // Simulate form submission (replace with actual API call)
+    // Prepare WhatsApp message with proper formatting
+    const whatsappNumber = '94724719902'
+    const message = `*NEW CONTACT FORM SUBMISSION*%0A%0A
+*Name:* ${formData.name}%0A
+*Email:* ${formData.email}%0A
+*Subject:* ${formData.subject}%0A
+*Message:* ${formData.message}%0A%0A
+*Sent from:* CLOTHING-DARK Website%0A
+*Date:* ${new Date().toLocaleString()}`
+
+    // Create WhatsApp URL
+    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${message}`
+    
+    // Simulate form submission and open WhatsApp
     setTimeout(() => {
       setFormStatus({
         submitted: true,
         success: true,
-        message: 'Thank you for your message! We will get back to you within 24 hours.'
+        message: 'Thank you for your message! You will be redirected to WhatsApp to complete your inquiry.'
       })
+      
+      // Open WhatsApp in new tab
+      window.open(whatsappURL, '_blank')
+      
       setFormData({
         name: '',
         email: '',
@@ -124,6 +141,34 @@ const Contact = () => {
     }
   ]
 
+  const whyChooseUs = [
+    {
+      icon: '⭐',
+      title: 'Premium Quality',
+      description: '100% organic cotton, pre-shrunk fabric that lasts'
+    },
+    {
+      icon: '🚚',
+      title: 'Fast Delivery',
+      description: 'Free express shipping on orders over $50'
+    },
+    {
+      icon: '🔄',
+      title: 'Easy Returns',
+      description: '30-day hassle-free return policy'
+    },
+    {
+      icon: '💎',
+      title: 'Sustainable',
+      description: 'Eco-friendly packaging and ethical sourcing'
+    }
+  ]
+
+  // Google Maps Directions URL
+  const getDirectionsUrl = () => {
+    return 'https://www.google.com/maps/dir//Fashion+District,+New+York,+NY/@40.7131294,-74.0036937,17z'
+  }
+
   return (
     <div className="contact-page">
       <Navbar />
@@ -167,7 +212,7 @@ const Contact = () => {
             <div className="form-content animate-on-scroll">
               <div className="section-header">
                 <h2>Send Us a Message</h2>
-                <p>Fill out the form below and we'll get back to you within 24 hours</p>
+                <p>Fill out the form below and we'll get back to you via WhatsApp</p>
               </div>
               
               {formStatus.submitted && (
@@ -232,8 +277,9 @@ const Contact = () => {
                 </div>
                 
                 <button type="submit" className="submit-btn" disabled={loading}>
-                  {loading ? 'Sending...' : 'Send Message'}
+                  {loading ? 'Sending...' : 'Send via WhatsApp'}
                 </button>
+                <p className="whatsapp-note">📱 Your message will be sent directly to +94 72 471 9902 on WhatsApp</p>
               </form>
             </div>
             
@@ -253,9 +299,35 @@ const Contact = () => {
               <div className="map-overlay">
                 <h3>Visit Our Store</h3>
                 <p>123 Fashion Avenue<br />New York, NY 10001</p>
-                <Link to="/shop" className="directions-btn">Get Directions →</Link>
+                <a 
+                  href={getDirectionsUrl()} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="directions-btn"
+                >
+                  Get Directions →
+                </a>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Why Choose Us Section */}
+      <div className="why-choose-section">
+        <div className="container">
+          <div className="section-header">
+            <h2>Why Choose CLOTHING-DARK?</h2>
+            <p>Experience the difference with our premium service</p>
+          </div>
+          <div className="why-choose-grid">
+            {whyChooseUs.map((item, index) => (
+              <div key={index} className="why-choose-card animate-on-scroll">
+                <div className="why-choose-icon">{item.icon}</div>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -310,16 +382,22 @@ const Contact = () => {
         </div>
       </div>
 
-      {/* Newsletter Section */}
-      <div className="newsletter-section">
+      {/* WhatsApp Contact Section */}
+      <div className="whatsapp-section">
         <div className="container">
-          <div className="newsletter-content">
-            <h2>Stay Updated</h2>
-            <p>Subscribe to our newsletter for exclusive offers and new collection alerts</p>
-            <form className="newsletter-form" onSubmit={(e) => e.preventDefault()}>
-              <input type="email" placeholder="Enter your email address" />
-              <button type="submit">Subscribe</button>
-            </form>
+          <div className="whatsapp-content">
+            <div className="whatsapp-icon">💬</div>
+            <h2>Quick Support on WhatsApp</h2>
+            <p>Need immediate assistance? Chat with our support team directly on WhatsApp</p>
+            <a 
+              href="https://wa.me/94724719902" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="whatsapp-btn"
+            >
+              Chat with us on WhatsApp →
+            </a>
+            <p className="whatsapp-number">+94 72 471 9902</p>
           </div>
         </div>
       </div>

@@ -1,9 +1,10 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from './Navbar'
+import { useAuth } from '../contexts/AuthContext'
 
 // Import your images from assets folder
-import largeImage from '../assets/Large.png'
+import largeImage from '../assets/Small01.png'
 import smallImage1 from '../assets/Small01.png'
 import smallImage2 from '../assets/Small02.png'
 import heroBackground from '../assets/hero.png'
@@ -12,6 +13,26 @@ import '../components_CSS/WelcomePage.css'
 
 const WelcomePage = () => {
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
+
+  // Handle shop navigation with auth check
+  const handleShopNavigation = () => {
+    if (isAuthenticated) {
+      navigate('/shop')
+    } else {
+      navigate('/login')
+    }
+  }
+
+  // Handle quick view navigation
+  const handleQuickView = () => {
+    navigate('/shop')
+  }
+
+  // Handle shop now button
+  const handleShopNow = () => {
+    navigate('/login')
+  }
 
   return (
     <div className="welcome-container">
@@ -34,7 +55,7 @@ const WelcomePage = () => {
               </div>
               <div className="feature-item">
                 <span className="check-icon">✓</span>
-                <span>Free Shipping Island</span>
+                <span>Free Shipping Worldwide</span>
               </div>
               <div className="feature-item">
                 <span className="check-icon">✓</span>
@@ -44,7 +65,7 @@ const WelcomePage = () => {
             <div className="cta-buttons">
               <button
                 className="btn btn-primary"
-                onClick={() => navigate('/signup')}
+                onClick={handleShopNow}
               >
                 Shop Now →
               </button>
@@ -69,7 +90,6 @@ const WelcomePage = () => {
                   alt="Premium Black Collection"
                   className="hero-img large-img"
                 />
-
               </div>
             </div>
           </div>
@@ -83,7 +103,6 @@ const WelcomePage = () => {
                   alt="Classic Black Tee"
                   className="hero-img small1-img"
                 />
-
               </div>
             </div>
             <div className="image-card small-image-card">
@@ -93,14 +112,13 @@ const WelcomePage = () => {
                   alt="Modern Fit Shirt"
                   className="hero-img small2-img"
                 />
-
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Featured Products Section */}
+      {/* Featured Products Section - Best Sellers */}
       <div id="products" className="featured-section">
         <div className="section-header">
           <h2>Our Best Sellers</h2>
@@ -114,14 +132,16 @@ const WelcomePage = () => {
                 alt="Classic Black T-Shirt"
               />
               <div className="product-overlay">
-                <button className="quick-view">Quick View</button>
+                <button className="quick-view" onClick={handleQuickView}>
+                  Quick View
+                </button>
               </div>
             </div>
             <div className="product-info">
               <h3>Classic Black T-Shirt</h3>
               <p>Essential everyday wear, ultra-comfortable</p>
               <div className="price">$29.99</div>
-              <button className="add-to-cart" onClick={() => navigate('/signup')}>
+              <button className="add-to-cart" onClick={handleShopNow}>
                 Shop Now
               </button>
             </div>
@@ -134,14 +154,16 @@ const WelcomePage = () => {
                 alt="Formal Black Shirt"
               />
               <div className="product-overlay">
-                <button className="quick-view">Quick View</button>
+                <button className="quick-view" onClick={handleQuickView}>
+                  Quick View
+                </button>
               </div>
             </div>
             <div className="product-info">
               <h3>Formal Black Shirt</h3>
               <p>Perfect for office and special occasions</p>
               <div className="price">$49.99</div>
-              <button className="add-to-cart" onClick={() => navigate('/signup')}>
+              <button className="add-to-cart" onClick={handleShopNow}>
                 Shop Now
               </button>
             </div>
@@ -151,17 +173,19 @@ const WelcomePage = () => {
             <div className="product-image">
               <img
                 src={smallImage2}
-                alt="Formal Black Shirt"
+                alt="Premium Black Shirt"
               />
               <div className="product-overlay">
-                <button className="quick-view">Quick View</button>
+                <button className="quick-view" onClick={handleQuickView}>
+                  Quick View
+                </button>
               </div>
             </div>
             <div className="product-info">
-              <h3>Formal Black Shirt</h3>
-              <p>Perfect for office and special occasions</p>
-              <div className="price">$49.99</div>
-              <button className="add-to-cart" onClick={() => navigate('/signup')}>
+              <h3>Premium Black Shirt</h3>
+              <p>Premium quality for sophisticated look</p>
+              <div className="price">$59.99</div>
+              <button className="add-to-cart" onClick={handleShopNow}>
                 Shop Now
               </button>
             </div>
@@ -171,17 +195,19 @@ const WelcomePage = () => {
             <div className="product-image">
               <img
                 src={largeImage}
-                alt="Premium Black Tee"
+                alt="Premium Bagee Black Tee"
               />
               <div className="product-overlay">
-                <button className="quick-view">Quick View</button>
+                <button className="quick-view" onClick={handleQuickView}>
+                  Quick View
+                </button>
               </div>
             </div>
             <div className="product-info">
-              <h3>Premium Black Tee</h3>
+              <h3>Premium Bagee Black Tee</h3>
               <p>Luxury cotton, premium quality feel</p>
-              <div className="price">$39.99</div>
-              <button className="add-to-cart" onClick={() => navigate('/signup')}>
+              <div className="price">$49.69</div>
+              <button className="add-to-cart" onClick={handleShopNow}>
                 Shop Now
               </button>
             </div>
@@ -219,14 +245,52 @@ const WelcomePage = () => {
         </div>
       </div>
 
-      {/* Newsletter Section */}
-      <div id="contact" className="newsletter-section">
-        <div className="newsletter-content">
-          <h2>Stay in Style</h2>
-          <p>Subscribe to get exclusive offers and new collection updates</p>
-          <div className="newsletter-form">
-            <input type="email" placeholder="Enter your email address" />
-            <button>Subscribe</button>
+      {/* Testimonials Section - Replacing Newsletter */}
+      <div className="testimonials-section">
+        <div className="section-header">
+          <h2>What Our Customers Say</h2>
+          <p>Join thousands of satisfied customers worldwide</p>
+        </div>
+        <div className="testimonials-grid">
+          <div className="testimonial-card">
+            <div className="testimonial-rating">★★★★★</div>
+            <p className="testimonial-text">"Absolutely love my new black t-shirt! The quality is amazing and it fits perfectly. Best purchase I've made this year!"</p>
+            <div className="testimonial-author">
+              <strong>Sarah Johnson</strong>
+              <span>Verified Buyer</span>
+            </div>
+          </div>
+          <div className="testimonial-card">
+            <div className="testimonial-rating">★★★★★</div>
+            <p className="testimonial-text">"The formal black shirt is outstanding. Perfect for office wear. The fabric is breathable and very comfortable."</p>
+            <div className="testimonial-author">
+              <strong>Michael Chen</strong>
+              <span>Verified Buyer</span>
+            </div>
+          </div>
+          <div className="testimonial-card">
+            <div className="testimonial-rating">★★★★★</div>
+            <p className="testimonial-text">"Great customer service and fast shipping. The oversized tee is my new favorite! Will definitely order again."</p>
+            <div className="testimonial-author">
+              <strong>Emily Rodriguez</strong>
+              <span>Verified Buyer</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Brand Story Section */}
+      <div className="brand-story-section">
+        <div className="brand-story-content">
+          <div className="brand-story-text">
+            <div className="story-badge">OUR STORY</div>
+            <h2>Inspired by Simplicity, Driven by Quality</h2>
+            <p>CLOTHING-DARK was born from a passion for timeless style and uncompromising quality. We believe that black isn't just a color—it's a statement. Every piece in our collection is thoughtfully designed, ethically manufactured, and crafted to last.</p>
+            <p>Join thousands of customers who have made the switch to sustainable, premium black clothing that never goes out of style.</p>
+            <button className="story-btn" onClick={handleShopNow}>Discover Our Collection →</button>
+          </div>
+          <div className="brand-story-image">
+            <div className="story-image-placeholder"></div>
           </div>
         </div>
       </div>
@@ -237,31 +301,42 @@ const WelcomePage = () => {
           <div className="footer-section">
             <h3>CLOTHING-DARK</h3>
             <p>Premium black clothing for the modern individual</p>
+            <div className="footer-social">
+              <span>📷 Instagram</span>
+              <span>📘 Facebook</span>
+              <span>🐦 Twitter</span>
+            </div>
           </div>
           <div className="footer-section">
             <h4>Quick Links</h4>
             <ul>
-              <li>About Us</li>
-              <li>Contact</li>
-              <li>Size Guide</li>
-              <li>FAQs</li>
+              <li onClick={() => navigate('/')}>Home</li>
+              <li onClick={() => navigate('/shop')}>Shop</li>
+              <li onClick={() => navigate('/features')}>Features</li>
+              <li onClick={() => navigate('/about')}>About Us</li>
+              <li onClick={() => navigate('/contact')}>Contact</li>
             </ul>
           </div>
           <div className="footer-section">
-            <h4>Policies</h4>
+            <h4>Customer Service</h4>
             <ul>
-              <li>Shipping Policy</li>
-              <li>Return Policy</li>
-              <li>Privacy Policy</li>
-              <li>Terms of Service</li>
+              <li>FAQ</li>
+              <li>Size Guide</li>
+              <li>Track Order</li>
+              <li>Returns Policy</li>
             </ul>
           </div>
           <div className="footer-section">
-            <h4>Follow Us</h4>
-            <div className="social-links">
-              <span>Instagram</span>
-              <span>Facebook</span>
-              <span>Twitter</span>
+            <h4>Contact Info</h4>
+            <ul>
+              <li>📞 +1 (555) 123-4567</li>
+              <li>✉️ support@clothing-dark.com</li>
+              <li>📍 123 Fashion Avenue, NY</li>
+            </ul>
+            <div className="payment-icons">
+              <span>💳 Visa</span>
+              <span>💳 Mastercard</span>
+              <span>💳 PayPal</span>
             </div>
           </div>
         </div>

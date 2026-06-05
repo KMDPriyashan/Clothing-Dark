@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import Navbar from '../components/Navbar'
 import '../pages_CSS/Cart.css'
 
 const Cart = () => {
   const navigate = useNavigate()
+  const { user, isAuthenticated } = useAuth()
   const [cartItems, setCartItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [promoCode, setPromoCode] = useState('')
@@ -15,6 +17,7 @@ const Cart = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('')
   const [processingOrder, setProcessingOrder] = useState(false)
+  const [orderSuccess, setOrderSuccess] = useState(false)
 
   // Load cart from localStorage on component mount
   const loadCart = () => {
@@ -53,7 +56,7 @@ const Cart = () => {
     }
   }, [cartItems, loading])
 
-  // Update item quantity - FIXED
+  // Update item quantity
   const updateQuantity = (id, selectedSize, newQuantity) => {
     if (newQuantity < 1) return
     setCartItems(prevItems =>
@@ -65,7 +68,7 @@ const Cart = () => {
     )
   }
 
-  // Remove item from cart with animation - FIXED
+  // Remove item from cart with animation
   const removeItem = (id, selectedSize) => {
     setRemovingId(`${id}-${selectedSize}`)
     setTimeout(() => {
@@ -74,13 +77,14 @@ const Cart = () => {
     }, 300)
   }
 
-  // Clear entire cart - FIXED
+  // Clear entire cart
   const clearCart = () => {
     if (window.confirm('Are you sure you want to clear your entire cart?')) {
       setCartItems([])
       localStorage.removeItem('cart')
       window.dispatchEvent(new Event('cartUpdated'))
-      alert('Cart cleared successfully!')
+      alert('✓ Cart cleared successfully!')
+      window.location.reload()
     }
   }
 
@@ -97,11 +101,11 @@ const Cart = () => {
     if (validPromos[promoCode.toUpperCase()]) {
       const discountPercent = validPromos[promoCode.toUpperCase()]
       setDiscount(discountPercent)
-      setPromoSuccess(`Promo code applied! You saved ${discountPercent}%`)
+      setPromoSuccess(`✓ Promo code applied! You saved ${discountPercent}%`)
       setPromoError('')
       setTimeout(() => setPromoSuccess(''), 3000)
     } else {
-      setPromoError('Invalid promo code')
+      setPromoError('✗ Invalid promo code')
       setPromoSuccess('')
       setTimeout(() => setPromoError(''), 3000)
     }
@@ -128,7 +132,42 @@ const Cart = () => {
     setPaymentMethod('')
   }
 
-  // Process order with payment
+  // Save order to localStorage
+  const saveOrderToLocalStorage = (orderData) => {
+    const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]')
+    existingOrders.unshift(orderData)
+    localStorage.setItem('orders', JSON.stringify(existingOrders))
+    window.dispatchEvent(new Event('ordersUpdated'))
+  }
+
+  // Send order notification
+  const sendOrderNotification = (orderData) => {
+    setOrderSuccess(true)
+    
+    const notification = document.createElement('div')
+    notification.className = 'order-success-notification'
+    notification.innerHTML = `
+      <div class="notification-content">
+        <span class="notification-icon">✅</span>
+        <div>
+          <strong>Order Placed Successfully!</strong>
+          <p>Order #${orderData.orderId} - Total: $${orderData.total.toFixed(2)}</p>
+        </div>
+      </div>
+    `
+    document.body.appendChild(notification)
+    
+    setTimeout(() => {
+      notification.classList.add('fade-out')
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification)
+        }
+      }, 500)
+    }, 5000)
+  }
+
+  // Process order with payment - FIXED: Clears cart items then redirects
   const processOrder = () => {
     if (!paymentMethod) {
       alert('Please select a payment method')
@@ -137,32 +176,66 @@ const Cart = () => {
 
     setProcessingOrder(true)
 
-    // Simulate payment processing
+    // Prepare order data
+    const orderId = 'ORD-' + Date.now()
+    const orderData = {
+      id: orderId,
+      orderId: orderId,
+      date: new Date().toLocaleDateString(),
+      dateTime: new Date().toLocaleString(),
+      createdAt: new Date().toISOString(),
+      items: cartItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        size: item.selectedSize,
+        category: item.category
+      })),
+      subtotal: subtotal,
+      discount: discount,
+      discountAmount: discountAmount,
+      shipping: shipping,
+      total: total,
+      totalPrice: total,
+      paymentMethod: paymentMethod,
+      status: 'Confirmed',
+      promoCodeApplied: promoCode || 'None',
+      userName: user?.displayName || localStorage.getItem('user_name') || 'Customer',
+      userEmail: user?.email || 'customer@example.com'
+    }
+
+    // Save order to localStorage
+    saveOrderToLocalStorage(orderData)
+    
+    // Send notification
+    sendOrderNotification(orderData)
+
+    // Step 1: Clear cart state
+    setCartItems([])
+    
+    // Step 2: Clear cart from localStorage
+    localStorage.removeItem('cart')
+    
+    // Step 3: Dispatch event to update navbar cart count
+    window.dispatchEvent(new Event('cartUpdated'))
+    
+    // Step 4: Close modal
+    closePaymentModal()
+    setProcessingOrder(false)
+    
+    // Step 5: Show success message
+    alert(`✅ Order Placed Successfully!\n\nOrder ID: ${orderId}\nTotal: $${total.toFixed(2)}\n\nThank you for shopping at CLOTHING-DARK!`)
+    
+    // Step 6: Redirect to home page after a short delay
     setTimeout(() => {
-      // Show success message
-      alert(`✅ Order Placed Successfully!\n\n` +
-        `Payment Method: ${paymentMethod}\n` +
-        `Total Amount: $${total.toFixed(2)}\n\n` +
-        `Thank you for shopping at CLOTHING-DARK!\n` +
-        `Your order will be delivered within 3-5 business days.\n\n` +
-        `Order confirmation has been sent to your email.`)
-      
-      // Clear cart from state and localStorage
-      setCartItems([])
-      localStorage.removeItem('cart')
-      
-      // Dispatch event to update navbar cart count
-      window.dispatchEvent(new Event('cartUpdated'))
-      
-      // Close modal
-      closePaymentModal()
-      setProcessingOrder(false)
-      
-      // Redirect to home page after 2 seconds
-      setTimeout(() => {
-        navigate('/')
-      }, 2000)
-    }, 2000)
+      window.location.href = '/'
+    }, 1000)
+  }
+
+  // Handle continue shopping
+  const handleContinueShopping = () => {
+    window.location.href = '/shop'
   }
 
   if (loading) {
@@ -181,7 +254,6 @@ const Cart = () => {
     <div className="cart-container">
       <Navbar />
       
-      {/* Cart Header */}
       <div className="cart-header">
         <h1 className="cart-title">Your Shopping Cart</h1>
         <p className="cart-subtitle">
@@ -194,9 +266,9 @@ const Cart = () => {
           <div className="empty-cart-icon">🛒</div>
           <h2>Your cart is empty</h2>
           <p>Looks like you haven't added any items to your cart yet.</p>
-          <Link to="/shop" className="continue-shopping-btn">
+          <button onClick={handleContinueShopping} className="continue-shopping-btn">
             Continue Shopping
-          </Link>
+          </button>
         </div>
       ) : (
         <div className="cart-content">
@@ -269,9 +341,9 @@ const Cart = () => {
               <button className="clear-cart-btn" onClick={clearCart}>
                 Clear Cart
               </button>
-              <Link to="/shop" className="continue-shopping-link">
+              <button onClick={handleContinueShopping} className="continue-shopping-link">
                 ← Continue Shopping
-              </Link>
+              </button>
             </div>
           </div>
 
@@ -305,7 +377,6 @@ const Cart = () => {
               </div>
             </div>
             
-            {/* Promo Code Section */}
             <div className="promo-section">
               <h4>Promo Code</h4>
               <div className="promo-input-group">
@@ -325,12 +396,10 @@ const Cart = () => {
               </div>
             </div>
             
-            {/* Checkout Button */}
             <button className="checkout-btn" onClick={openPaymentModal}>
               Proceed to Checkout
             </button>
             
-            {/* Payment Methods */}
             <div className="payment-methods">
               <p>Secure Payment Methods</p>
               <div className="payment-icons">
