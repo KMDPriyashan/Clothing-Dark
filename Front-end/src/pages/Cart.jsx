@@ -82,7 +82,9 @@ const Cart = () => {
     if (window.confirm('Are you sure you want to clear your entire cart?')) {
       setCartItems([])
       localStorage.removeItem('cart')
+      localStorage.removeItem('cart_items')
       window.dispatchEvent(new Event('cartUpdated'))
+      window.dispatchEvent(new Event('storage'))
       alert('✓ Cart cleared successfully!')
       window.location.reload()
     }
@@ -167,7 +169,7 @@ const Cart = () => {
     }, 5000)
   }
 
-  // Process order with payment - FIXED: Clears cart items then redirects
+  // Process order with payment - FIXED: Properly clears cart items and count
   const processOrder = () => {
     if (!paymentMethod) {
       alert('Please select a payment method')
@@ -211,26 +213,33 @@ const Cart = () => {
     // Send notification
     sendOrderNotification(orderData)
 
+    // IMPORTANT: Clear everything before navigation
     // Step 1: Clear cart state
     setCartItems([])
     
     // Step 2: Clear cart from localStorage
     localStorage.removeItem('cart')
+    localStorage.removeItem('cart_items')
     
-    // Step 3: Dispatch event to update navbar cart count
+    // Step 3: Dispatch event to update navbar cart count (multiple times to ensure update)
     window.dispatchEvent(new Event('cartUpdated'))
+    window.dispatchEvent(new Event('storage'))
     
     // Step 4: Close modal
     closePaymentModal()
-    setProcessingOrder(false)
     
     // Step 5: Show success message
     alert(`✅ Order Placed Successfully!\n\nOrder ID: ${orderId}\nTotal: $${total.toFixed(2)}\n\nThank you for shopping at CLOTHING-DARK!`)
     
-    // Step 6: Redirect to home page after a short delay
+    // Step 6: Set processing to false
+    setProcessingOrder(false)
+    
+    // Step 7: Redirect to home page after a short delay
     setTimeout(() => {
+      // Force a final cart update before redirect
+      window.dispatchEvent(new Event('cartUpdated'))
       window.location.href = '/'
-    }, 1000)
+    }, 500)
   }
 
   // Handle continue shopping
