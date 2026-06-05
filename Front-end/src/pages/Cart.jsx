@@ -77,14 +77,13 @@ const Cart = () => {
     }, 300)
   }
 
-  // Clear entire cart - WITH PAGE REFRESH
+  // Clear entire cart
   const clearCart = () => {
     if (window.confirm('Are you sure you want to clear your entire cart?')) {
       setCartItems([])
       localStorage.removeItem('cart')
       window.dispatchEvent(new Event('cartUpdated'))
       alert('✓ Cart cleared successfully!')
-      // Refresh the page to show empty cart
       window.location.reload()
     }
   }
@@ -138,7 +137,6 @@ const Cart = () => {
     const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]')
     existingOrders.unshift(orderData)
     localStorage.setItem('orders', JSON.stringify(existingOrders))
-    // Dispatch event for profile page to update
     window.dispatchEvent(new Event('ordersUpdated'))
   }
 
@@ -146,7 +144,6 @@ const Cart = () => {
   const sendOrderNotification = (orderData) => {
     setOrderSuccess(true)
     
-    // Create notification element
     const notification = document.createElement('div')
     notification.className = 'order-success-notification'
     notification.innerHTML = `
@@ -170,7 +167,7 @@ const Cart = () => {
     }, 5000)
   }
 
-  // Process order with payment - WITH PAGE REFRESH AND REDIRECT
+  // Process order with payment - FIXED: Clears cart items then redirects
   const processOrder = () => {
     if (!paymentMethod) {
       alert('Please select a payment method')
@@ -214,25 +211,29 @@ const Cart = () => {
     // Send notification
     sendOrderNotification(orderData)
 
-    // Clear cart from localStorage
+    // Step 1: Clear cart state
+    setCartItems([])
+    
+    // Step 2: Clear cart from localStorage
     localStorage.removeItem('cart')
     
-    // Dispatch event to update navbar cart count
+    // Step 3: Dispatch event to update navbar cart count
     window.dispatchEvent(new Event('cartUpdated'))
     
-    // Close modal
+    // Step 4: Close modal
     closePaymentModal()
     setProcessingOrder(false)
     
-    // Show success message
+    // Step 5: Show success message
+    alert(`✅ Order Placed Successfully!\n\nOrder ID: ${orderId}\nTotal: $${total.toFixed(2)}\n\nThank you for shopping at CLOTHING-DARK!`)
+    
+    // Step 6: Redirect to home page after a short delay
     setTimeout(() => {
-      alert(`✅ Order Placed Successfully!\n\nOrder ID: ${orderId}\nTotal: $${total.toFixed(2)}\n\nThank you for shopping at CLOTHING-DARK!`)
-      // Redirect to home page with refresh
       window.location.href = '/'
-    }, 500)
+    }, 1000)
   }
 
-  // Handle continue shopping - WITH PAGE REFRESH
+  // Handle continue shopping
   const handleContinueShopping = () => {
     window.location.href = '/shop'
   }
@@ -253,7 +254,6 @@ const Cart = () => {
     <div className="cart-container">
       <Navbar />
       
-      {/* Cart Header */}
       <div className="cart-header">
         <h1 className="cart-title">Your Shopping Cart</h1>
         <p className="cart-subtitle">
@@ -377,7 +377,6 @@ const Cart = () => {
               </div>
             </div>
             
-            {/* Promo Code Section */}
             <div className="promo-section">
               <h4>Promo Code</h4>
               <div className="promo-input-group">
@@ -397,12 +396,10 @@ const Cart = () => {
               </div>
             </div>
             
-            {/* Checkout Button */}
             <button className="checkout-btn" onClick={openPaymentModal}>
               Proceed to Checkout
             </button>
             
-            {/* Payment Methods */}
             <div className="payment-methods">
               <p>Secure Payment Methods</p>
               <div className="payment-icons">

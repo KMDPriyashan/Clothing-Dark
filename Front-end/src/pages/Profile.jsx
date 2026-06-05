@@ -16,6 +16,7 @@ const Profile = () => {
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   
   // Profile form state
   const [profileData, setProfileData] = useState({
@@ -29,6 +30,9 @@ const Profile = () => {
     bio: '',
     photoURL: ''
   });
+  
+  // Original data for comparison
+  const [originalData, setOriginalData] = useState({});
   
   // Password change state
   const [passwordData, setPasswordData] = useState({
@@ -47,94 +51,90 @@ const Profile = () => {
   const [loadingOrders, setLoadingOrders] = useState(false);
 
   // Load user data from Firestore
-  useEffect(() => {
-    const loadUserData = async () => {
-      if (user) {
-        try {
-          const userDocRef = doc(db, 'users', user.uid);
-          const userDoc = await getDoc(userDocRef);
-          
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setProfileData({
-              name: userData.name || user.displayName || '',
-              email: user.email || '',
-              phone: userData.phone || '',
-              address: userData.address || '',
-              city: userData.city || '',
-              postalCode: userData.postalCode || '',
-              country: userData.country || 'Sri Lanka',
-              bio: userData.bio || '',
-              photoURL: userData.photoURL || user.photoURL || ''
-            });
-            if (userData.photoURL) {
-              setImagePreview(userData.photoURL);
-            }
-          } else {
-            setProfileData({
-              name: user.displayName || '',
-              email: user.email || '',
-              phone: '',
-              address: '',
-              city: '',
-              postalCode: '',
-              country: 'Sri Lanka',
-              bio: '',
-              photoURL: user.photoURL || ''
-            });
-            if (user.photoURL) {
-              setImagePreview(user.photoURL);
-            }
+  const loadUserData = async () => {
+    if (user) {
+      try {
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const newProfileData = {
+            name: userData.name || user.displayName || '',
+            email: user.email || '',
+            phone: userData.phone || '',
+            address: userData.address || '',
+            city: userData.city || '',
+            postalCode: userData.postalCode || '',
+            country: userData.country || 'Sri Lanka',
+            bio: userData.bio || '',
+            photoURL: userData.photoURL || user.photoURL || ''
+          };
+          setProfileData(newProfileData);
+          setOriginalData(newProfileData);
+          if (userData.photoURL) {
+            setImagePreview(userData.photoURL);
+          } else if (user.photoURL) {
+            setImagePreview(user.photoURL);
           }
-        } catch (error) {
-          console.error('Error loading user data:', error);
+        } else {
+          const newProfileData = {
+            name: user.displayName || '',
+            email: user.email || '',
+            phone: '',
+            address: '',
+            city: '',
+            postalCode: '',
+            country: 'Sri Lanka',
+            bio: '',
+            photoURL: user.photoURL || ''
+          };
+          setProfileData(newProfileData);
+          setOriginalData(newProfileData);
+          if (user.photoURL) {
+            setImagePreview(user.photoURL);
+          }
         }
+      } catch (error) {
+        console.error('Error loading user data:', error);
       }
-    };
-    
+    }
+  };
+
+  useEffect(() => {
     loadUserData();
   }, [user]);
 
-  // Load orders from Firestore or localStorage
+  // Load orders from localStorage
   useEffect(() => {
     const loadOrders = async () => {
       setLoadingOrders(true);
       
-      if (user) {
-        // Try to load from Firestore
-        try {
-          const ordersQuery = query(
-            collection(db, 'orders'),
-            where('userId', '==', user.uid),
-            orderBy('createdAt', 'desc')
-          );
-          const ordersSnapshot = await getDocs(ordersQuery);
-          const ordersData = ordersSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }));
-          
-          if (ordersData.length > 0) {
-            setOrders(ordersData);
-            setLoadingOrders(false);
-            return;
-          }
-        } catch (error) {
-          console.error('Error loading orders from Firestore:', error);
-        }
-      }
-      
-      // Fallback to localStorage
+      // Load from localStorage (where cart orders are saved)
       const savedOrders = localStorage.getItem('orders');
       if (savedOrders) {
         const parsedOrders = JSON.parse(savedOrders);
-        setOrders(parsedOrders);
+        // Filter orders for current user by email
+        const userOrders = parsedOrders.filter(order => 
+          order.userEmail === user?.email || !order.userEmail
+        );
+        setOrders(userOrders);
       }
       
       setLoadingOrders(false);
     };
     
     loadOrders();
+    
+    // Listen for order updates
+    const handleOrdersUpdate = () => {
+      loadOrders();
+    };
+    
+    window.addEventListener('ordersUpdated', handleOrdersUpdate);
+    return () => {
+      window.removeEventListener('ordersUpdated', handleOrdersUpdate);
+    };
   }, [user]);
 
   // Load feedback from Firestore
@@ -167,21 +167,36 @@ const Profile = () => {
     }
   }, [isAuthenticated, authLoading, navigate]);
 
-  // Handle profile image upload
+  // Handle profile image upload - SAVES TO FIREBASE STORAGE
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       setUploadingImage(true);
       try {
-        const imageRef = ref(storage, `profile_images/${user.uid}/${Date.now()}_${file.name}`);
+        // Create a unique filename
+        const fileName = `${Date.now()}_${file.name}`;
+        const imageRef = ref(storage, `profile_images/${user.uid}/${fileName}`);
+        
+        // Upload image to Firebase Storage
         await uploadBytes(imageRef, file);
         const photoURL = await getDownloadURL(imageRef);
         
+        // Update state with new image URL
         setProfileImage(photoURL);
-        setImagePreview(URL.createObjectURL(file));
+        setImagePreview(photoURL);
         setProfileData({ ...profileData, photoURL });
         
-        setMessage({ type: 'success', text: 'Image uploaded successfully! Save your profile to update.' });
+        // Save the photoURL to Firestore immediately
+        const userDocRef = doc(db, 'users', user.uid);
+        await setDoc(userDocRef, {
+          photoURL: photoURL,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+        
+        // Update Firebase Auth profile
+        await updateUserProfileData(user, { photoURL: photoURL });
+        
+        setMessage({ type: 'success', text: 'Profile picture updated successfully!' });
         setTimeout(() => setMessage({ type: '', text: '' }), 3000);
       } catch (error) {
         console.error('Error uploading image:', error);
@@ -205,6 +220,17 @@ const Profile = () => {
       ...passwordData,
       [e.target.name]: e.target.value
     });
+  };
+
+  // Toggle edit mode
+  const toggleEditMode = () => {
+    if (isEditing) {
+      // Cancel editing - revert to original data
+      setProfileData(originalData);
+      setImagePreview(originalData.photoURL || '');
+    }
+    setIsEditing(!isEditing);
+    setMessage({ type: '', text: '' });
   };
 
   const updateProfile = async (e) => {
@@ -233,7 +259,17 @@ const Profile = () => {
         updatedAt: new Date().toISOString()
       }, { merge: true });
       
+      // Update original data
+      setOriginalData(profileData);
+      
       setMessage({ type: 'success', text: 'Profile updated successfully!' });
+      setIsEditing(false);
+      
+      // Reload user data to ensure everything is synced
+      setTimeout(() => {
+        loadUserData();
+      }, 500);
+      
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -392,7 +428,7 @@ const Profile = () => {
               <span className="upload-icon">📷</span>
             </label>
           </div>
-          <h1>My Profile</h1>
+          <h1>{profileData.name || 'User'}</h1>
           <p>Manage your account information and orders</p>
         </div>
       </div>
@@ -445,116 +481,170 @@ const Profile = () => {
           {/* Profile Information Tab */}
           {activeTab === 'profile' && (
             <div className="profile-card">
-              <h2>Profile Information</h2>
-              <form onSubmit={updateProfile} className="profile-form">
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Full Name</label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={profileData.name}
-                      onChange={handleProfileChange}
-                      placeholder="Enter your full name"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Email Address</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={profileData.email}
-                      disabled
-                      className="disabled-input"
-                    />
-                    <small>Email cannot be changed</small>
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Phone Number</label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={profileData.phone}
-                      onChange={handleProfileChange}
-                      placeholder="Enter your phone number"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Bio</label>
-                    <textarea
-                      name="bio"
-                      value={profileData.bio}
-                      onChange={handleProfileChange}
-                      placeholder="Tell us about yourself"
-                      rows="3"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Address</label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={profileData.address}
-                      onChange={handleProfileChange}
-                      placeholder="Street address"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>City</label>
-                    <input
-                      type="text"
-                      name="city"
-                      value={profileData.city}
-                      onChange={handleProfileChange}
-                      placeholder="City"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Postal Code</label>
-                    <input
-                      type="text"
-                      name="postalCode"
-                      value={profileData.postalCode}
-                      onChange={handleProfileChange}
-                      placeholder="Postal code"
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>Country</label>
-                    <select
-                      name="country"
-                      value={profileData.country}
-                      onChange={handleProfileChange}
-                    >
-                      <option>United States</option>
-                      <option>United Kingdom</option>
-                      <option>Canada</option>
-                      <option>Australia</option>
-                      <option>Sri Lanka</option>
-                      <option>India</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="form-actions">
-                  <button type="submit" className="save-btn" disabled={loading}>
-                    {loading ? 'Saving...' : 'Save Changes'}
+              <div className="profile-card-header">
+                <h2>Profile Information</h2>
+                {!isEditing ? (
+                  <button className="edit-btn" onClick={toggleEditMode}>
+                    ✏️ Edit Profile
                   </button>
+                ) : (
+                  <div className="edit-actions">
+                    <button className="cancel-btn" onClick={toggleEditMode}>
+                      Cancel
+                    </button>
+                    <button 
+                      className="save-btn" 
+                      onClick={updateProfile}
+                      disabled={loading}
+                    >
+                      {loading ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {!isEditing ? (
+                // Display Mode - Show user data
+                <div className="profile-display">
+                  <div className="display-row">
+                    <div className="display-label">Full Name:</div>
+                    <div className="display-value">{profileData.name || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">Email Address:</div>
+                    <div className="display-value">{profileData.email || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">Phone Number:</div>
+                    <div className="display-value">{profileData.phone || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">Bio:</div>
+                    <div className="display-value">{profileData.bio || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">Address:</div>
+                    <div className="display-value">{profileData.address || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">City:</div>
+                    <div className="display-value">{profileData.city || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">Postal Code:</div>
+                    <div className="display-value">{profileData.postalCode || 'Not set'}</div>
+                  </div>
+                  <div className="display-row">
+                    <div className="display-label">Country:</div>
+                    <div className="display-value">{profileData.country || 'Not set'}</div>
+                  </div>
                 </div>
-              </form>
+              ) : (
+                // Edit Mode - Show form
+                <form onSubmit={updateProfile} className="profile-form">
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Full Name</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={profileData.name}
+                        onChange={handleProfileChange}
+                        placeholder="Enter your full name"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Email Address</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={profileData.email}
+                        disabled
+                        className="disabled-input"
+                      />
+                      <small>Email cannot be changed</small>
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Phone Number</label>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={profileData.phone}
+                        onChange={handleProfileChange}
+                        placeholder="Enter your phone number"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Bio</label>
+                      <textarea
+                        name="bio"
+                        value={profileData.bio}
+                        onChange={handleProfileChange}
+                        placeholder="Tell us about yourself"
+                        rows="3"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Address</label>
+                      <input
+                        type="text"
+                        name="address"
+                        value={profileData.address}
+                        onChange={handleProfileChange}
+                        placeholder="Street address"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>City</label>
+                      <input
+                        type="text"
+                        name="city"
+                        value={profileData.city}
+                        onChange={handleProfileChange}
+                        placeholder="City"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Postal Code</label>
+                      <input
+                        type="text"
+                        name="postalCode"
+                        value={profileData.postalCode}
+                        onChange={handleProfileChange}
+                        placeholder="Postal code"
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Country</label>
+                      <select
+                        name="country"
+                        value={profileData.country}
+                        onChange={handleProfileChange}
+                      >
+                        <option>United States</option>
+                        <option>United Kingdom</option>
+                        <option>Canada</option>
+                        <option>Australia</option>
+                        <option>Sri Lanka</option>
+                        <option>India</option>
+                      </select>
+                    </div>
+                  </div>
+                </form>
+              )}
             </div>
           )}
 
@@ -575,8 +665,8 @@ const Profile = () => {
                 </div>
               ) : (
                 <div className="orders-list">
-                  {orders.map((order) => (
-                    <div key={order.id || order.orderId} className="order-card">
+                  {orders.map((order, index) => (
+                    <div key={order.id || index} className="order-card">
                       <div className="order-header">
                         <div>
                           <span className="order-id">Order #{order.orderId || order.id}</span>
@@ -598,7 +688,7 @@ const Profile = () => {
                         <div className="order-total">
                           <strong>Total: ${(order.total || order.totalPrice).toFixed(2)}</strong>
                         </div>
-                        <button className="view-order-btn" onClick={() => alert(`Order Details:\nOrder ID: ${order.orderId || order.id}\nStatus: ${order.status || 'Processing'}\nTotal: $${(order.total || order.totalPrice).toFixed(2)}`)}>
+                        <button className="view-order-btn" onClick={() => alert(`Order Details:\nOrder ID: ${order.orderId || order.id}\nStatus: ${order.status || 'Processing'}\nTotal: $${(order.total || order.totalPrice).toFixed(2)}\nPayment: ${order.paymentMethod || 'N/A'}`)}>
                           View Details
                         </button>
                       </div>
